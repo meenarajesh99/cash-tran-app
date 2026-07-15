@@ -1,0 +1,57 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / editors (workspace-level)
+.idea/
+.vscode/
+*.iml
+
+# Environment files (do not commit secrets)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.jks
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Node / JS
+node_modules/
+
+# Java / Maven
+cashtran-server/target/
+target/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Database / local dev data
+db_data/
+
+# Misc
+*.log
+*.bak
+
+application.properties
+application-*.properties
+
+.agents/
+.project
+img.png
+img_1.png
+skills-lock.json
+
+target/
+**/target/
+
+tenmo*
+README.md

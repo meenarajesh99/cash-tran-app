@@ -1,0 +1,82 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: on-failure:3
+    container_name: cashtran-db-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "-c max_connections=200 -c shared_buffers=256MB"
+    volumes:
+      - db_data_prod:/var/lib/postgresql/data
+      - ./database/cashtran.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cashtran-network-prod
+    logging:
+      driver: "splunk"
+      options:
+        splunk-token: ${SPLUNK_TOKEN}
+        splunk-url: ${SPLUNK_URL}
+
+  backend:
+    build:
+      context: ./cashtran-server
+      dockerfile: Dockerfile
+    container_name: cashtran-backend-prod
+    restart: on-failure:3
+    environment:
+      DB_URL: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SERVER_PORT: 8080
+      JWT_BASE64_SECRET: ${JWT_BASE64_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400}
+      JWT_REMEMBER_ME_EXPIRATION: ${JWT_REMEMBER_ME_EXPIRATION:-604800}
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_OPTS: "-Xmx2g -Xms1g -XX:+UseG1GC"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cashtran-network-prod
+    expose:
+      - "8080"
+    logging:
+      driver: "splunk"
+      options:
+        splunk-token: ${SPLUNK_TOKEN}
+        splunk-url: ${SPLUNK_URL}
+
+  frontend:
+    build:
+      context: ./cashtran-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://api.example.com}
+    container_name: cashtran-frontend-prod
+    restart: on-failure:3
+    networks:
+      - cashtran-network-prod
+    expose:
+      - "80"
+    logging:
+      driver: "splunk"
+      options:
+        splunk-token: ${SPLUNK_TOKEN}
+        splunk-url: ${SPLUNK_URL}
+
+volumes:
+  db_data_prod:
+    driver: local
+
+networks:
+  cashtran-network-prod:
+    driver: bridge

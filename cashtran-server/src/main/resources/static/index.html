@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CashTran - Money Transfer System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+    <!-- Login/Register Page -->
+    <div id="auth-page" class="page active">
+        <div class="auth-container">
+            <div class="auth-card">
+                <h1>CashTran</h1>
+                <p class="tagline">💰 Secure Money Transfer System</p>
+
+                <div class="auth-tabs">
+                    <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+                    <button class="tab-btn" onclick="switchTab('register')">Register</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form active">
+                    <input type="text" id="login-username" placeholder="Username" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    <div id="login-error" class="error-msg"></div>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="auth-form">
+                    <input type="text" id="register-username" placeholder="Username" required>
+                    <input type="password" id="register-password" placeholder="Password" required>
+                    <input type="password" id="register-confirm" placeholder="Confirm Password" required>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                    <div id="register-error" class="error-msg"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="page">
+        <nav class="navbar">
+            <div class="nav-container">
+                <h2 class="logo">CashTran</h2>
+                <div class="user-info">
+                    <span id="current-user"></span>
+                    <button class="btn btn-secondary" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <ul class="menu">
+                    <li><a href="#" onclick="showSection('balance')" class="menu-item active">💵 Balance</a></li>
+                    <li><a href="#" onclick="showSection('transfers')" class="menu-item">📊 Transfers</a></li>
+                    <li><a href="#" onclick="showSection('pending')" class="menu-item">⏳ Pending</a></li>
+                    <li><a href="#" onclick="showSection('send')" class="menu-item">➡️ Send Money</a></li>
+                    <li><a href="#" onclick="showSection('request')" class="menu-item">⬅️ Request Money</a></li>
+                </ul>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Balance Section -->
+                <section id="balance" class="section active">
+                    <h2>Account Balance</h2>
+                    <div class="balance-card">
+                        <p>Current Balance</p>
+                        <h1 id="balance-amount">$0.00</h1>
+                        <button class="btn btn-primary" onclick="refreshBalance()">Refresh</button>
+                    </div>
+                </section>
+
+                <!-- Transfers Section -->
+                <section id="transfers" class="section">
+                    <h2>Transfer History</h2>
+                    <div class="table-container">
+                        <table id="transfers-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>From/To</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody id="transfers-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Pending Section -->
+                <section id="pending" class="section">
+                    <h2>Pending Requests</h2>
+                    <div class="table-container">
+                        <table id="pending-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>From</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="pending-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Send Money Section -->
+                <section id="send" class="section">
+                    <h2>Send CT Bucks</h2>
+                    <form id="send-form" class="form-card">
+                        <label>Select Recipient</label>
+                        <select id="send-recipient" required>
+                            <option value="">Choose a user...</option>
+                        </select>
+                        <label>Amount</label>
+                        <input type="number" id="send-amount" placeholder="Enter amount" min="0.01" step="0.01" required>
+                        <button type="submit" class="btn btn-primary">Send Money</button>
+                        <div id="send-error" class="error-msg"></div>
+                        <div id="send-success" class="success-msg"></div>
+                    </form>
+                </section>
+
+                <!-- Request Money Section -->
+                <section id="request" class="section">
+                    <h2>Request CT Bucks</h2>
+                    <form id="request-form" class="form-card">
+                        <label>Select Payer</label>
+                        <select id="request-payer" required>
+                            <option value="">Choose a user...</option>
+                        </select>
+                        <label>Amount</label>
+                        <input type="number" id="request-amount" placeholder="Enter amount" min="0.01" step="0.01" required>
+                        <button type="submit" class="btn btn-primary">Request Money</button>
+                        <div id="request-error" class="error-msg"></div>
+                        <div id="request-success" class="success-msg"></div>
+                    </form>
+                </section>
+            </main>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

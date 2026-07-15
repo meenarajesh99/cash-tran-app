@@ -1,0 +1,44 @@
+import React, { createContext, useState, useEffect } from "react";
+import { authLogin, authRegister } from "../api/authApi";
+
+export const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => {
+    const raw = localStorage.getItem("cashtran_user");
+    return raw ? JSON.parse(raw) : null;
+  });
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("cashtran_user", JSON.stringify(user));
+      // token assumed stored separately by login function
+    } else {
+      localStorage.removeItem("cashtran_user");
+      localStorage.removeItem("cashtran_token");
+    }
+  }, [user]);
+
+  async function login(username, password) {
+    const resp = await authLogin(username, password);
+    const { token, user: userObj } = resp.data;
+    localStorage.setItem("cashtran_token", token);
+    setUser(userObj);
+    return resp;
+  }
+
+  async function register(username, password) {
+    return authRegister(username, password);
+  }
+
+  function logout() {
+    setUser(null);
+    localStorage.removeItem("cashtran_token");
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
