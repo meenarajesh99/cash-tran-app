@@ -21,9 +21,9 @@ export function AuthProvider({ children }) {
 
   async function login(username, password) {
     const resp = await authLogin(username, password);
-    const { token, user: userObj } = resp.data;
+    const token = resp.data.token;
     localStorage.setItem("cashtran_token", token);
-    setUser(userObj);
+    setUser({ username });
     return resp;
   }
 

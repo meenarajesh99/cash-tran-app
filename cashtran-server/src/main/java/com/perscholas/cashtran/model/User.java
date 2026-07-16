@@ -63,8 +63,6 @@ public class User {
       this.authorities = authorities;
    }
 
-
-
    public void setAuthorities(String authorities) {
       String[] roles = authorities.split(",");
       for(String role : roles) {

@@ -75,6 +75,10 @@ public class TokenProvider implements InitializingBean {
                 .compact();
     }
 
+    public String createToken(Authentication authentication) {
+        return createToken(authentication, false);
+    }
+
     /**
      * Extracts Authentication from a JWT token
      * @param token JWT token string
