@@ -1,11 +1,11 @@
 
-package com.perscholas.cashtran.dao;
+package com.perscholas.cashtran.repository;
 
 import com.perscholas.cashtran.model.User;
 
 import java.util.List;
 
-public interface UserDao {
+public interface UserRepository {
 
     public long findIdByAccountID(long accountId);
 

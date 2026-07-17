@@ -16,7 +16,9 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 /**
@@ -29,10 +31,12 @@ public class TokenProvider implements InitializingBean {
     private static final Logger log = LoggerFactory.getLogger(TokenProvider.class);
     private static final String AUTHORITIES_KEY = "auth";
 
+    //this is the application's signing secret. Without this, a valid JWT can't be generated
     private final String base64Secret;
     private final long tokenValidityInMilliseconds;
     private final long tokenValidityInMillisecondsForRememberMe;
 
+    //this is the cryptographic key generated from the Base64 secret. Spring initializes it once
     private Key key;
 
     public TokenProvider(
@@ -44,15 +48,18 @@ public class TokenProvider implements InitializingBean {
         this.tokenValidityInMillisecondsForRememberMe = tokenValidityInSecondsForRememberMe * 1000;
     }
 
+    // Spring automatically calls this after construction of the bean to initialize the cryptographic key from the Base64 secret
+    // then creates an HMAC key which is later used for signing, verifying JWTs
     @Override
     public void afterPropertiesSet() throws Exception {
+        //this is where the secret key gets prepared
         byte[] keyBytes = Decoders.BASE64.decode(base64Secret);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
     /**
-     * Creates a JWT token from the Authentication object
-     * @param authentication Spring Security Authentication with user and authorities
+     * Creates a JWT token from the Authentication object after login
+     * @param authentication Spring Security Authentication with user and authorities (ROLE_USER, ROLE_ADMIN etc)
      * @param rememberMe whether to use extended validity period
      * @return JWT token string
      */
@@ -97,6 +104,7 @@ public class TokenProvider implements InitializingBean {
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
+        //here password is empty because authentication has already happened
         User principal = new User(claims.getSubject(), "", authorities);
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);

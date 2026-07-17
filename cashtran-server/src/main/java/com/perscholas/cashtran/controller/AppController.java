@@ -1,11 +1,11 @@
 package com.perscholas.cashtran.controller;
 
-import com.perscholas.cashtran.dao.AccountDAO;
-import com.perscholas.cashtran.dao.TransferDAO;
-import com.perscholas.cashtran.dao.UserDao;
+import com.perscholas.cashtran.repository.AccountRepository;
+import com.perscholas.cashtran.repository.TransferRepository;
+import com.perscholas.cashtran.repository.UserRepository;
 import com.perscholas.cashtran.model.Account;
 import com.perscholas.cashtran.model.Transfer;
-import com.perscholas.cashtran.model.TransferDTO;
+import com.perscholas.cashtran.dto.TransferDTO;
 import com.perscholas.cashtran.model.User;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,51 +23,51 @@ import java.util.List;
 public class AppController {
 
     @Autowired
-    AccountDAO accountDao;
+    AccountRepository accountRepository;
 
     @Autowired
-    UserDao userDao;
+    UserRepository userRepository;
 
     @Autowired
-    TransferDAO transferDAO;
+    TransferRepository transferRepository;
 
     // gets user balance
     @GetMapping("/balance")
     public BigDecimal getAccountBalance(Principal principal){
         String username = principal.getName();
-        long userId = userDao.findIdByUsername(username);
-        BigDecimal balance = accountDao.getBalance(userId);
+        long userId = userRepository.findIdByUsername(username);
+        BigDecimal balance = accountRepository.getBalance(userId);
         return balance;
     }
 
     // gets user account ID
     @GetMapping("/account/{id}")
     public Account getAccountByUserId(@PathVariable long id){
-        return accountDao.getAnAccountByUserId(id);
+        return accountRepository.getAnAccountByUserId(id);
     }
 
     // gets user ID
     @GetMapping("/user/{id}")
     public long getUserIdByAccountId(@PathVariable long id){
-        return userDao.findIdByAccountID(id);
+        return userRepository.findIdByAccountID(id);
     }
 
     // gets list of all users
     @GetMapping("/users")
     public List<User> getAllUsers(Principal principal){
         String username = principal.getName();
-        long userID = userDao.findIdByUsername(username);
-        return userDao.findAll(userID);
+        long userID = userRepository.findIdByUsername(username);
+        return userRepository.findAll(userID);
     }
 
     // gets list of transfers based on user
     @GetMapping("/transfers")
     public List<Transfer> listTransfers(Principal principal){
         String username = principal.getName();
-        long userID = userDao.findIdByUsername(username);
-        Account account = accountDao.getAnAccountByUserId(userID);
+        long userID = userRepository.findIdByUsername(username);
+        Account account = accountRepository.getAnAccountByUserId(userID);
         long accountId = account.getAccountId();
-        List<Transfer> transferList = transferDAO.getAllApprovedTransfers(accountId);
+        List<Transfer> transferList = transferRepository.getAllApprovedTransfers(accountId);
         return  transferList;
     }
 
@@ -75,17 +75,17 @@ public class AppController {
     @GetMapping("/transfers/pending")
     public List<Transfer> listPendingTransfers(Principal principal){
         String username = principal.getName();
-        long userID = userDao.findIdByUsername(username);
-        Account account = accountDao.getAnAccountByUserId(userID);
+        long userID = userRepository.findIdByUsername(username);
+        Account account = accountRepository.getAnAccountByUserId(userID);
         long accountId = account.getAccountId();
-        List<Transfer> transferList = transferDAO.getAllPendingTransfers(accountId);
+        List<Transfer> transferList = transferRepository.getAllPendingTransfers(accountId);
         return  transferList;
     }
 
     // gets active transfers
     @GetMapping("/transfers/{transferId}")
     public Transfer transferDetails (@PathVariable long transferId){
-        return transferDAO.getTransferById(transferId);
+        return transferRepository.getTransferById(transferId);
     }
 
     // send money (immediate transfer)
@@ -93,8 +93,8 @@ public class AppController {
     @PostMapping("/transfers/send")
     public Transfer sendMoney(Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
         String username = principal.getName();
-        long userID = userDao.findIdByUsername(username);
-        Transfer transfer = transferDAO.newTransfer(userID, transferDTO.getUserId(), transferDTO.getAmount());
+        long userID = userRepository.findIdByUsername(username);
+        Transfer transfer = transferRepository.newTransfer(userID, transferDTO.getUserId(), transferDTO.getAmount());
         return transfer;
     }
 
@@ -103,8 +103,8 @@ public class AppController {
     @PostMapping("/transfers")
     public Transfer startTransfer (Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
         String username = principal.getName();
-        long userID = userDao.findIdByUsername(username);
-        Transfer transfer = transferDAO.newTransfer(userID, transferDTO.getUserId(), transferDTO.getAmount());
+        long userID = userRepository.findIdByUsername(username);
+        Transfer transfer = transferRepository.newTransfer(userID, transferDTO.getUserId(), transferDTO.getAmount());
         return transfer;
     }
 
@@ -113,8 +113,8 @@ public class AppController {
     @PostMapping("/requests")
     public Transfer requestTransfer(Principal principal, @Valid @RequestBody TransferDTO transferDTO){
         String username = principal.getName();
-        long userId = userDao.findIdByUsername(username);
-        Transfer transfer = transferDAO.newRequest(transferDTO.getUserId(), userId, transferDTO.getAmount());
+        long userId = userRepository.findIdByUsername(username);
+        Transfer transfer = transferRepository.newRequest(transferDTO.getUserId(), userId, transferDTO.getAmount());
         return transfer;
     }
 
@@ -122,21 +122,21 @@ public class AppController {
     @PutMapping("/transfer/{transferId}/accept")
     public boolean acceptTransfer(Principal principal, @Valid @RequestBody TransferDTO transferDTO, @PathVariable long transferId) {
         String usernameFrom = principal.getName();
-        long userFromId = userDao.findIdByUsername(usernameFrom);
-        return transferDAO.acceptRequest(userFromId, transferDTO.getUserId(), transferDTO.getAmount(), transferId);
+        long userFromId = userRepository.findIdByUsername(usernameFrom);
+        return transferRepository.acceptRequest(userFromId, transferDTO.getUserId(), transferDTO.getAmount(), transferId);
     }
 
     // submits rejection and cancels transfer request
     @PutMapping("/transfer/{transferId}/reject")
     public boolean rejectTransfer(Principal principal, @Valid @RequestBody TransferDTO transferDTO, @PathVariable long transferId) {
         String usernameFrom = principal.getName();
-        long userFromId = userDao.findIdByUsername(usernameFrom);
-        return transferDAO.rejectRequest(transferId);
+        long userFromId = userRepository.findIdByUsername(usernameFrom);
+        return transferRepository.rejectRequest(transferId);
     }
 
     // gets user account id based on username
     @GetMapping("/username/{accountId}")
     public String username (@PathVariable long accountId){
-        return userDao.findUserByAccountID(accountId);
+        return userRepository.findUserByAccountID(accountId);
     }
 }

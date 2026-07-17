@@ -1,4 +1,4 @@
-package com.perscholas.cashtran.dao;
+package com.perscholas.cashtran.repository;
 
 import com.perscholas.cashtran.model.Account;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -9,11 +9,11 @@ import javax.sql.DataSource;
 import java.math.BigDecimal;
 
 @Component
-public class JdbcAccountDAO implements AccountDAO {
+public class JdbcAccountRepository implements AccountRepository {
 
     private JdbcTemplate jdbcTemplate;
 
-    public JdbcAccountDAO(DataSource ds) {
+    public JdbcAccountRepository(DataSource ds) {
         this.jdbcTemplate = new JdbcTemplate(ds);
     }
 

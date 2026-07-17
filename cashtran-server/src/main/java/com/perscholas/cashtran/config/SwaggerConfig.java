@@ -1,4 +1,4 @@
-package com.perscholas.cashtran;
+package com.perscholas.cashtran.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;

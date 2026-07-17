@@ -1,4 +1,4 @@
-package com.perscholas.cashtran.security;
+package com.perscholas.cashtran.security.handler;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;

@@ -1,7 +1,7 @@
 package com.perscholas.cashtran.service;
 
 import com.perscholas.cashtran.security.jwt.TokenProvider;
-import com.perscholas.cashtran.model.LoginDTO;
+import com.perscholas.cashtran.dto.LoginDTO;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

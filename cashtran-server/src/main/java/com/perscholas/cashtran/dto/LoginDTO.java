@@ -1,4 +1,4 @@
-package com.perscholas.cashtran.model;
+package com.perscholas.cashtran.dto;
 
 /**
  * DTO for storing a user's credentials.

@@ -1,9 +1,7 @@
-package com.perscholas.cashtran.dao;
+package com.perscholas.cashtran.repository;
 
-import com.perscholas.cashtran.model.Transfer;
 import com.perscholas.cashtran.model.User;
 import org.junit.jupiter.api.*;
-import org.springframework.util.Assert;
 
 import java.util.List;
 
@@ -15,13 +13,13 @@ public class JdbcUserDAOTest extends DaoIntegrationTest{
     public static final User USER_2 = new User(2L,"Roland","Pass","ROLE_USER");
     public static final User USER_3 = new User(3L,"Andy","Pass","ROLE_USER");
 
-    private JdbcUserDAO sut;
+    private JdbcUserRepository sut;
 
     private User userTest;
 
     @BeforeAll
     public void setup(){
-        sut = new JdbcUserDAO(dataSource);
+        sut = new JdbcUserRepository(dataSource);
         userTest = new User(1004L,"Robot","Pass","Admin");
     }
 

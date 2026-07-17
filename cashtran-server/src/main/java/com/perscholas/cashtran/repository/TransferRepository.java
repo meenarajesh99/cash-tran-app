@@ -1,11 +1,11 @@
-package com.perscholas.cashtran.dao;
+package com.perscholas.cashtran.repository;
 
 import com.perscholas.cashtran.model.Transfer;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-public interface TransferDAO {
+public interface TransferRepository {
 
     public List<Transfer> getAllApprovedTransfers(long accountId);
 

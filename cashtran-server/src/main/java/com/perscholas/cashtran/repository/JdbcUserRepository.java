@@ -1,4 +1,4 @@
-package com.perscholas.cashtran.dao;
+package com.perscholas.cashtran.repository;
 
 import com.perscholas.cashtran.model.User;
 import org.springframework.dao.DataAccessException;
@@ -14,14 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class JdbcUserDAO implements UserDao {
+public class JdbcUserRepository implements UserRepository {
 
     private JdbcTemplate jdbcTemplate;
 
     // defines starting balance
     private static final BigDecimal STARTING_BALANCE = new BigDecimal("1000.00");
 
-    public JdbcUserDAO(DataSource dataSource) {
+    public JdbcUserRepository(DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 

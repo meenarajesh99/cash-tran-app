@@ -1,29 +1,27 @@
-package com.perscholas.cashtran.dao;
+package com.perscholas.cashtran.repository;
 
 import com.perscholas.cashtran.model.Transfer;
 import org.junit.jupiter.api.*;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.concurrent.TransferQueue;
 
 @Disabled
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class JdbcTransferDAOTest extends DaoIntegrationTest {
+public class JdbcTransferRepositoryTest extends DaoIntegrationTest {
     private static final Transfer TRANSFER_1 = new Transfer(1L, 1L, 2L,new BigDecimal("10.00"),"Send","Approved");
     private static final Transfer TRANSFER_2 = new Transfer(2L, 2L, 1L,new BigDecimal("10.00"),"Send","Approved");
     private static final Transfer TRANSFER_3 = new Transfer(3L, 2L, 1L,new BigDecimal("10.00"),"Send","Rejected");
     private static final Transfer TRANSFER_4 = new Transfer(4L, 3L, 1L,new BigDecimal("10.00"),"Send","Rejected");
 
 
-    private JdbcTransferDAO sut;
-    private JdbcAccountDAO accountDao;
+    private JdbcTransferRepository sut;
+    private JdbcAccountRepository accountDao;
     private Transfer transferTest;
     @BeforeAll
     public void setup(){
-        accountDao = new JdbcAccountDAO(dataSource);
-        sut = new JdbcTransferDAO(dataSource);
+        accountDao = new JdbcAccountRepository(dataSource);
+        sut = new JdbcTransferRepository(dataSource);
         transferTest = new Transfer(5L, 2L, 1L,new BigDecimal("200.00"),"Send","Approved");
 
     }

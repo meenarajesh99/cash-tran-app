@@ -1,4 +1,4 @@
-package com.perscholas.cashtran.security;
+package com.perscholas.cashtran.exception;
 
 import org.springframework.security.core.AuthenticationException;
 

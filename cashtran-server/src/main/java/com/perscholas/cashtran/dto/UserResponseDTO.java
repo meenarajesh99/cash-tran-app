@@ -1,11 +1,13 @@
-package com.perscholas.cashtran.model;
+package com.perscholas.cashtran.dto;
 
-public class UserResponse {
+import com.perscholas.cashtran.model.User;
+
+public class UserResponseDTO {
 
     private final long id;
     private final String username;
 
-    public UserResponse(User user) {
+    public UserResponseDTO(User user) {
         this.id = user.getId();
         this.username = user.getUsername();
     }

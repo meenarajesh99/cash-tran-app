@@ -1,4 +1,4 @@
-package com.perscholas.cashtran.dao;
+package com.perscholas.cashtran.repository;
 
 import com.perscholas.cashtran.model.Account;
 import com.perscholas.cashtran.model.Transfer;
@@ -14,21 +14,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class JdbcTransferDAO implements TransferDAO {
+public class JdbcTransferRepository implements TransferRepository {
 
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
-    private AccountDAO accountDao;
+    private AccountRepository accountRepository;
 
     //base table joining command
     private String joinTemplate = "SELECT t.transfer_id, t.account_from, t.account_to, t.amount, tt.transfer_type_desc, ts.transfer_status_desc FROM transfer t " +
             "JOIN transfer_status ts ON t.transfer_status_id = ts.transfer_status_id " +
             "JOIN transfer_type tt ON t.transfer_type_id = tt.transfer_type_id ";
 
-    public JdbcTransferDAO(DataSource dataSource) {
+    public JdbcTransferRepository(DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
-        this.accountDao = new JdbcAccountDAO(dataSource);
+        this.accountRepository = new JdbcAccountRepository(dataSource);
     }
 
     // pulls list of all past approved transfers
@@ -73,13 +73,13 @@ public class JdbcTransferDAO implements TransferDAO {
     public Transfer newTransfer(long userFrom, long userTo, BigDecimal amount) {
         String sql = "INSERT INTO transfer (account_from, account_to, amount, transfer_status_id, transfer_type_id) Values (?, ?, ?, ?, ?) RETURNING transfer_id";
         long newTransferId = 0;
-        Account accountFrom = accountDao.getAnAccountByUserId(userFrom);
-        Account accountTo = accountDao.getAnAccountByUserId(userTo);
+        Account accountFrom = accountRepository.getAnAccountByUserId(userFrom);
+        Account accountTo = accountRepository.getAnAccountByUserId(userTo);
 
         if (userFrom != userTo) {
             try {
-                if (accountDao.subtractBalance(amount, userFrom)) {
-                    accountDao.addBalance(amount, userTo);
+                if (accountRepository.subtractBalance(amount, userFrom)) {
+                    accountRepository.addBalance(amount, userTo);
                     newTransferId = jdbcTemplate.queryForObject(sql, Long.class, accountFrom.getAccountId(), accountTo.getAccountId(), amount, 2, 2);
                 } else {
                     newTransferId = jdbcTemplate.queryForObject(sql, Long.class, accountFrom.getAccountId(), accountTo.getAccountId(), amount, 3, 2);
@@ -100,8 +100,8 @@ public class JdbcTransferDAO implements TransferDAO {
     public Transfer newRequest(long userFrom, long userTo, BigDecimal amount) {
         String sql = "INSERT INTO transfer (account_from, account_to, amount, transfer_status_id, transfer_type_id) Values (?, ?, ?, ?, ?) RETURNING transfer_id";
         long newTransferId = 0;
-        Account accountFrom = accountDao.getAnAccountByUserId(userFrom);
-        Account accountTo = accountDao.getAnAccountByUserId(userTo);
+        Account accountFrom = accountRepository.getAnAccountByUserId(userFrom);
+        Account accountTo = accountRepository.getAnAccountByUserId(userTo);
 
         if (userFrom != userTo) {
             try {
@@ -124,8 +124,8 @@ public class JdbcTransferDAO implements TransferDAO {
         String sql = "UPDATE transfer SET transfer_status_id = ?  WHERE transfer_id = ?";
 
         try {
-            if (accountDao.subtractBalance(amount, userFrom)) {
-                accountDao.addBalance(amount, userTo);
+            if (accountRepository.subtractBalance(amount, userFrom)) {
+                accountRepository.addBalance(amount, userTo);
                 jdbcTemplate.update(sql, 2, transferId);
                 return true;
             } else {

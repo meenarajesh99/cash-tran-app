@@ -1,11 +1,11 @@
 package com.perscholas.cashtran.controller;
 
-import com.perscholas.cashtran.dao.UserDao;
-import com.perscholas.cashtran.model.LoginDTO;
-import com.perscholas.cashtran.model.RegisterUserDTO;
+import com.perscholas.cashtran.repository.UserRepository;
+import com.perscholas.cashtran.dto.LoginDTO;
+import com.perscholas.cashtran.dto.RegisterUserDTO;
 import com.perscholas.cashtran.model.User;
-import com.perscholas.cashtran.model.LoginResponse;
-import com.perscholas.cashtran.model.UserResponse;
+import com.perscholas.cashtran.dto.LoginResponseDTO;
+import com.perscholas.cashtran.dto.UserResponseDTO;
 
 import com.perscholas.cashtran.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,23 +20,23 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthenticationController {
 
-    private final UserDao userDao;
+    private final UserRepository userRepository;
     private final AuthService authService;
 
     public AuthenticationController(
             AuthService authService,
-            UserDao userDao) {
+            UserRepository userRepository) {
         this.authService = authService;
-        this.userDao = userDao;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
+    public ResponseEntity<LoginResponseDTO> login(
             @RequestBody LoginDTO loginDTO) {
         String token = authService.login(loginDTO);
-        User user = userDao.findByUsername(loginDTO.getUsername());
-        UserResponse userResponse = new UserResponse(user);
-        return ResponseEntity.ok(new LoginResponse(token, userResponse));
+        User user = userRepository.findByUsername(loginDTO.getUsername());
+        UserResponseDTO userResponse = new UserResponseDTO(user);
+        return ResponseEntity.ok(new LoginResponseDTO(token, userResponse));
     }
 
     @Operation(
@@ -44,11 +44,11 @@ public class AuthenticationController {
     )
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/register")
-    public UserResponse register(
+    public UserResponseDTO register(
             @Valid @RequestBody RegisterUserDTO newUser) {
 
         boolean created =
-                userDao.create(
+                userRepository.create(
                         newUser.getUsername(),
                         newUser.getPassword()
                 );
@@ -60,10 +60,10 @@ public class AuthenticationController {
         }
 
         User user =
-                userDao.findByUsername(
+                userRepository.findByUsername(
                         newUser.getUsername()
                 );
 
-        return new UserResponse(user);
+        return new UserResponseDTO(user);
     }
 }

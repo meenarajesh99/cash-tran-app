@@ -1,4 +1,4 @@
-package com.perscholas.cashtran.dao;
+package com.perscholas.cashtran.repository;
 
 
 import org.junit.jupiter.api.AfterEach;

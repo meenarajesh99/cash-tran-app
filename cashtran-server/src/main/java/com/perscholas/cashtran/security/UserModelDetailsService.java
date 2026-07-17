@@ -1,7 +1,8 @@
 package com.perscholas.cashtran.security;
 
-import com.perscholas.cashtran.dao.UserDao;
+import com.perscholas.cashtran.exception.UserNotActivatedException;
 import com.perscholas.cashtran.model.User;
+import com.perscholas.cashtran.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,10 +31,10 @@ public class UserModelDetailsService implements UserDetailsService {
     private static final Logger log = LoggerFactory.getLogger(UserModelDetailsService.class);
     private static final String DEFAULT_ROLE = "ROLE_USER";
 
-    private final UserDao userDao;
+    private final UserRepository userRepository;
 
-    public UserModelDetailsService(UserDao userDao) {
-        this.userDao = userDao;
+    public UserModelDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     /**
@@ -48,7 +48,7 @@ public class UserModelDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) {
         log.debug("Authenticating user '{}'", username);
 
-        User user = userDao.findByUsername(username.toLowerCase());
+        User user = userRepository.findByUsername(username.toLowerCase());
 
         if (user == null) {
             throw new UsernameNotFoundException("User not found: " + username);

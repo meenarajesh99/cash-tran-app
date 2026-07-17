@@ -1,8 +1,8 @@
-package com.perscholas.cashtran.dao;
+package com.perscholas.cashtran.repository;
 import com.perscholas.cashtran.model.Account;
 import java.math.BigDecimal;
 
-public interface AccountDAO {
+public interface AccountRepository {
 
     BigDecimal getBalance(long id);
 

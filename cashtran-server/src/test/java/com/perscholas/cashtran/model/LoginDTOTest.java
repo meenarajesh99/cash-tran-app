@@ -1,5 +1,6 @@
 package com.perscholas.cashtran.model;
 
+import com.perscholas.cashtran.dto.LoginDTO;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

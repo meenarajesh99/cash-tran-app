@@ -1,4 +1,4 @@
-package com.perscholas.cashtran.model;
+package com.perscholas.cashtran.dto;
 
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;

@@ -1,5 +1,7 @@
-package com.perscholas.cashtran.security;
+package com.perscholas.cashtran.config;
 
+import com.perscholas.cashtran.security.handler.JwtAccessDeniedHandler;
+import com.perscholas.cashtran.security.handler.JwtAuthenticationEntryPoint;
 import com.perscholas.cashtran.security.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
