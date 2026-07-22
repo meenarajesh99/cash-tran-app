@@ -1,100 +1,207 @@
 package com.perscholas.cashtran.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
+@Entity
+@Table(name = "cashtran_user")
 public class User {
 
-   private Long id;
-   private String username;
-   private String password;
-   private boolean activated;
-   private Set<Authority> authorities = new HashSet<>();
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "user_id")
+  private Long userId;
 
-   public User() { }
+  @Column(nullable = false, unique = true)
+  private String username;
 
-   public User(Long id, String username, String password, String authorities) {
-      this.id = id;
-      this.username = username;
-      this.password = password;
-      this.activated = true;
-   }
+  @Column(nullable = false)
+  private String password;
 
+  @Column(nullable = false, unique = true)
+  private String email;
 
-   //getters and setters
-   public Long getId() {
-      return id;
-   }
+  @Column(nullable = false)
+  private boolean activated;
 
-   public void setId(Long id) {
-      this.id = id;
-   }
+  /*
+   * User <-> Authority
+   *
+   * user_authority:
+   *
+   * user_id
+   * authority_id
+   */
+  @ManyToMany(fetch = FetchType.EAGER)
+  @JoinTable(
+      name = "cashtran_user_authority",
+      joinColumns = @JoinColumn(name = "user_id"),
+      inverseJoinColumns = @JoinColumn(name = "authority_id"))
+  private Set<Authority> authorities = new HashSet<>();
 
-   public String getUsername() {
-      return username;
-   }
+  /*
+   * User -> Account
+   *
+   * Account owns relationship
+   * through account.user_id
+   */
+  @OneToOne(
+      mappedBy = "user",
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
+  @JsonIgnore
+  private Account account;
 
-   public void setUsername(String username) {
-      this.username = username;
-   }
+  public User() {}
 
-   public String getPassword() {
-      return password;
-   }
+  public User(String username, String password, String email, boolean activated) {
 
-   public void setPassword(String password) {
-      this.password = password;
-   }
+    this.username = username;
+    this.password = password;
+    this.email = email;
+    this.activated = activated;
+  }
 
-   public boolean isActivated() {
-      return activated;
-   }
+  public Long getUserId() {
+    return userId;
+  }
 
-   public void setActivated(boolean activated) {
-      this.activated = activated;
-   }
+  public void setUserId(Long userId) {
+    this.userId = userId;
+  }
 
-   public Set<Authority> getAuthorities() {
-      return authorities;
-   }
+  public String getUsername() {
+    return username;
+  }
 
-   public void setAuthorities(Set<Authority> authorities) {
-      this.authorities = authorities;
-   }
+  public void setUsername(String username) {
+    this.username = username;
+  }
 
-   public void setAuthorities(String authorities) {
-      String[] roles = authorities.split(",");
-      for(String role : roles) {
-         this.authorities.add(new Authority("ROLE_" + role));
-      }
-   }
+  public String getPassword() {
+    return password;
+  }
 
-   @Override
-   public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      User user = (User) o;
-      return id == user.id &&
-              activated == user.activated &&
-              Objects.equals(username, user.username) &&
-              Objects.equals(password, user.password) &&
-              Objects.equals(authorities, user.authorities);
-   }
+  public void setPassword(String password) {
+    this.password = password;
+  }
 
-   @Override
-   public int hashCode() {
-      return Objects.hash(id, username, password, activated, authorities);
-   }
+  public String getEmail() {
+    return email;
+  }
 
-   @Override
-   public String toString() {
-      return "User{" +
-              "id=" + id +
-              ", username='" + username + '\'' +
-              ", activated=" + activated +
-              ", authorities=" + authorities +
-              '}';
-   }
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
+  public boolean isActivated() {
+    return activated;
+  }
+
+  public void setActivated(boolean activated) {
+    this.activated = activated;
+  }
+
+  /*
+   * Required by Spring Security UserDetails
+   */
+  public boolean isEnabled() {
+    return activated;
+  }
+
+  public Set<Authority> getAuthorities() {
+    return authorities;
+  }
+
+  public void setAuthorities(Set<Authority> authorities) {
+    this.authorities.clear();
+    if (authorities != null) {
+      this.authorities.addAll(authorities);
+    }
+  }
+
+  public void addAuthority(Authority authority) {
+    if (authority != null) {
+      authorities.add(authority);
+    }
+  }
+
+  public void removeAuthority(Authority authority) {
+    authorities.remove(authority);
+  }
+
+  /*
+   * Prefer this method:
+   *
+   * Authority authority =
+   * authorityRepository.findByName("ROLE_USER");
+   *
+   * user.addAuthority(authority);
+   *
+   * instead of creating new Authority objects.
+   */
+  public boolean hasAuthority(String authorityName) {
+    return authorities.stream()
+        .anyMatch(authority -> authority.getAuthorityName().equals(authorityName));
+  }
+
+  public Account getAccount() {
+    return account;
+  }
+
+  public void setAccount(Account account) {
+    this.account = account;
+    if (account != null && account.getUser() != this) {
+      account.setUser(this);
+    }
+  }
+
+  /*
+   * Keep both sides synchronized
+   */
+  public void removeAccount() {
+
+    if (account != null) {
+      account.setUser(null);
+      account = null;
+    }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof User)) {
+      return false;
+    }
+
+    User user = (User) o;
+    return userId != null && userId.equals(user.userId);
+  }
+
+  @Override
+  public int hashCode() {
+    return getClass().hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return "User{"
+        + "userId="
+        + userId
+        + ", username='"
+        + username
+        + '\''
+        + ", email='"
+        + email
+        + '\''
+        + ", activated="
+        + activated
+        + '}';
+  }
 }
-

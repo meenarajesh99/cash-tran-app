@@ -1,30 +1,33 @@
 package com.perscholas.cashtran.dto;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+
 import java.math.BigDecimal;
 
 public class TransferDTO {
 
+  @NotNull(message = "User ID is required")
+  @Positive(message = "User ID must be greater than zero")
+  private Long userId;
 
-    @Positive(message = "There should exist a user.")
-    private long userId;
-    @Positive(message = "Amount should be greater than zero.")
-    private BigDecimal amount;
+  @NotNull(message = "Amount is required")
+  @Positive(message = "Amount must be greater than zero")
+  private BigDecimal amount;
 
-    public long getUserId() {
-        return userId;
-    }
+  public Long getUserId() {
+    return userId;
+  }
 
-    public void setUserId(long userId) {
-        this.userId = userId;
-    }
+  public void setUserId(Long userId) {
+    this.userId = userId;
+  }
 
-    public BigDecimal getAmount() {
-        return amount;
-    }
+  public BigDecimal getAmount() {
+    return amount;
+  }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
+  public void setAmount(BigDecimal amount) {
+    this.amount = amount;
+  }
 }
-

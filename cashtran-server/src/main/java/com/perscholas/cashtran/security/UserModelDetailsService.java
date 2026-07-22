@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,13 +49,13 @@ public class UserModelDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) {
         log.debug("Authenticating user '{}'", username);
 
-        User user = userRepository.findByUsername(username.toLowerCase());
+        Optional<User> user = userRepository.findByUsername(username);
 
-        if (user == null) {
+        if (!user.isPresent()) {
             throw new UsernameNotFoundException("User not found: " + username);
         }
 
-        return createSpringSecurityUser(user);
+        return createSpringSecurityUser(user.get());
     }
 
     /**
@@ -75,7 +76,7 @@ public class UserModelDetailsService implements UserDetailsService {
         if (user.getAuthorities() != null && !user.getAuthorities().isEmpty()) {
             authorities.addAll(
                     user.getAuthorities().stream()
-                            .map(auth -> new SimpleGrantedAuthority(auth.getName()))
+                            .map(auth -> new SimpleGrantedAuthority(auth.getAuthorityName()))
                             .collect(Collectors.toList())
             );
         } else {
@@ -88,7 +89,7 @@ public class UserModelDetailsService implements UserDetailsService {
 
         return (org.springframework.security.core.userdetails.User) org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
-                .password("{bcrypt}" + user.getPassword())
+                .password(user.getPassword())
                 .authorities(authorities)
                 .accountExpired(false)
                 .accountLocked(false)

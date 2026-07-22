@@ -1,41 +1,57 @@
 package com.perscholas.cashtran.model;
 
+import jakarta.persistence.*;
+
 import java.util.Objects;
 
+@Entity
+@Table(name = "authority")
 public class Authority {
 
-   private String name;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "authority_id")
+  private Long authorityId;
 
-   public String getName() {
-      return name;
-   }
+  @Column(name = "authority_name", nullable = false, unique = true)
+  private String authorityName;
 
-   public void setName(String name) {
-      this.name = name;
-   }
+  public Authority() {}
 
-   public Authority(String name) {
-      this.name = name;
-   }
+  public Authority(String authorityName) {
+    this.authorityName = authorityName;
+  }
 
-   @Override
-   public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      Authority authority = (Authority) o;
-      return name == authority.name;
-   }
+  public Long getAuthorityId() {
+    return authorityId;
+  }
 
-   @Override
-   public int hashCode() {
-      return Objects.hash(name);
-   }
+  public void setAuthorityId(Long authorityId) {
+    this.authorityId = authorityId;
+  }
 
-   @Override
-   public String toString() {
-      return "Authority{" +
-              "name=" + name +
-              '}';
-   }
+  public String getAuthorityName() {
+    return authorityName;
+  }
+
+  public void setAuthorityName(String name) {
+    this.authorityName = authorityName;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+
+    if (this == o) return true;
+
+    if (!(o instanceof Authority)) return false;
+
+    Authority that = (Authority) o;
+
+    return Objects.equals(authorityName, that.authorityName);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(authorityName);
+  }
 }
-

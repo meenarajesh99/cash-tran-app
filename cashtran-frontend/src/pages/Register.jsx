@@ -17,6 +17,7 @@ import {
 
 import {
   Person,
+  Email,
   Lock,
   Visibility,
   VisibilityOff,
@@ -31,6 +32,8 @@ export default function RegisterPage() {
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
+
+  const [email, setEmail] = useState("");
 
   const [password, setPassword] = useState("");
 
@@ -82,7 +85,7 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
-      await register(username, password);
+      await register(username, password, email);
 
       setSuccess("Registration successful. Redirecting to login...");
 
@@ -100,49 +103,30 @@ export default function RegisterPage() {
     <Box
       sx={{
         minHeight: "100vh",
-
         display: "flex",
-
         justifyContent: "center",
-
         alignItems: "center",
-
         p: 2,
-
         background: "linear-gradient(135deg,#1565c0,#42a5f5)",
       }}
     >
       <Paper
         elevation={10}
-
         sx={{
           width: 430,
-
           p: 5,
-
           borderRadius: 5,
         }}
       >
-        {/* Header */}
-
-        <Box
-          textAlign="center"
-
-          mb={4}
-        >
+        <Box textAlign="center" mb={4}>
           <AccountBalanceWallet
             sx={{
               fontSize: 70,
-
               color: "primary.main",
             }}
           />
 
-          <Typography
-            variant="h4"
-
-            fontWeight="bold"
-          >
+          <Typography variant="h4" fontWeight="bold">
             Create Account
           </Typography>
 
@@ -152,43 +136,27 @@ export default function RegisterPage() {
         </Box>
 
         {error && (
-          <Alert
-            severity="error"
-
-            sx={{ mb: 2 }}
-          >
+          <Alert severity="error" sx={{ mb: 2 }}>
             {String(error)}
           </Alert>
         )}
 
         {success && (
-          <Alert
-            severity="success"
-
-            sx={{ mb: 2 }}
-          >
+          <Alert severity="success" sx={{ mb: 2 }}>
             {success}
           </Alert>
         )}
 
-        <Box
-          component="form"
+        <Box component="form" onSubmit={onSubmit}>
+          {/* Username */}
 
-          onSubmit={onSubmit}
-        >
           <TextField
             fullWidth
-
             label="Username"
-
             margin="normal"
-
             value={username}
-
             onChange={(e) => setUsername(e.target.value)}
-
             required
-
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -198,21 +166,35 @@ export default function RegisterPage() {
             }}
           />
 
+          {/* Email */}
+
           <TextField
             fullWidth
-
-            label="Password"
-
+            label="Email"
             margin="normal"
-
-            type={showPassword ? "text" : "password"}
-
-            value={password}
-
-            onChange={(e) => setPassword(e.target.value)}
-
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Email />
+                </InputAdornment>
+              ),
+            }}
+          />
 
+          {/* Password */}
+
+          <TextField
+            fullWidth
+            label="Password"
+            margin="normal"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -236,27 +218,21 @@ export default function RegisterPage() {
 
               <LinearProgress
                 variant="determinate"
-
                 value={passwordStrength(password)}
               />
             </Box>
           )}
 
+          {/* Confirm Password */}
+
           <TextField
             fullWidth
-
             label="Confirm Password"
-
             margin="normal"
-
             type={showConfirmPassword ? "text" : "password"}
-
             value={confirmPassword}
-
             onChange={(e) => setConfirmPassword(e.target.value)}
-
             required
-
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -278,22 +254,14 @@ export default function RegisterPage() {
 
           <Button
             fullWidth
-
             type="submit"
-
             variant="contained"
-
             size="large"
-
             disabled={loading}
-
             sx={{
               mt: 4,
-
               py: 1.5,
-
               borderRadius: 3,
-
               fontWeight: "bold",
             }}
           >
@@ -301,24 +269,14 @@ export default function RegisterPage() {
           </Button>
         </Box>
 
-        <Stack
-          direction="row"
-
-          justifyContent="center"
-
-          mt={4}
-
-          spacing={1}
-        >
+        <Stack direction="row" justifyContent="center" mt={4} spacing={1}>
           <Typography color="text.secondary">
             Already have an account?
           </Typography>
 
           <Link
             component="button"
-
             underline="hover"
-
             onClick={() => navigate("/login")}
           >
             Login

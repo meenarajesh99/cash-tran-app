@@ -1,36 +1,33 @@
 package com.perscholas.cashtran.dto;
 
-/**
- * DTO for storing a user's credentials.
- */
+import jakarta.validation.constraints.NotBlank;
+
 public class LoginDTO {
 
-   private String username;
-   private String password;
+  @NotBlank(message = "Username is required")
+  private String username;
 
-   public String getUsername() {
-      return username;
-   }
+  @NotBlank(message = "Password is required")
+  private String password;
 
-   public void setUsername(String username) {
-      this.username = username;
-   }
+  public String getUsername() {
+    return username;
+  }
 
-   public String getPassword() {
-      return password;
-   }
+  public void setUsername(String username) {
+    this.username = username;
+  }
 
-   public void setPassword(String password) {
-      this.password = password;
-   }
+  public String getPassword() {
+    return password;
+  }
 
-   //login prompt
-   @Override
-   public String toString() {
-      return "LoginDTO{" +
-              "username='" + username + '\'' +
-              ", password='" + password + '\'' +
-              '}';
-   }
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+  @Override
+  public String toString() {
+    return "LoginDTO{" + "username='" + username + '\'' + ", password='[PROTECTED]'" + '}';
+  }
 }
-

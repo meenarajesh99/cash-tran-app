@@ -1,12 +1,14 @@
 package com.perscholas.cashtran.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class LoginResponseDTO {
 
     private final String token;
     private final UserResponseDTO user;
 
     public LoginResponseDTO(
-            String token,
+            @NotBlank String token,
             UserResponseDTO user) {
 
         this.token = token;

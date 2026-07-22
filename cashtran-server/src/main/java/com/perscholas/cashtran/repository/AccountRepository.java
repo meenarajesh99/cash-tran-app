@@ -1,15 +1,20 @@
 package com.perscholas.cashtran.repository;
+
 import com.perscholas.cashtran.model.Account;
-import java.math.BigDecimal;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-public interface AccountRepository {
+import java.util.Optional;
 
-    BigDecimal getBalance(long id);
+public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    Account getAnAccountByUserId(long userId);
-
-    void addBalance(BigDecimal amount, long accountId);
-
-    boolean subtractBalance(BigDecimal amount, long accountId);
+    @Query("""
+        SELECT a
+        FROM Account a
+        WHERE a.user.userId = :userId
+    """)
+    Optional<Account> findByUserId(
+            @Param("userId") Long userId
+    );
 }
-

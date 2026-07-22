@@ -1,22 +1,20 @@
-
 package com.perscholas.cashtran.repository;
 
 import com.perscholas.cashtran.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import java.util.Optional;
 
-public interface UserRepository {
+public interface UserRepository extends JpaRepository<User, Long> {
 
-    public long findIdByAccountID(long accountId);
+    Optional<User> findByUsername(String username);
 
-    String findUserByAccountID(long accountId);
+    Optional<User> findByEmail(String email);
 
-    List<User> findAll(long id);
+    Optional<User> findByUserId(Long userId);
 
-    User findByUsername(String username);
+    boolean existsByUsername(String username);
 
-    long findIdByUsername(String username);
+    boolean existsByEmail(String email);
 
-    boolean create(String username, String password);
 }
-

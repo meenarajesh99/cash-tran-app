@@ -1,73 +1,98 @@
 package com.perscholas.cashtran.model;
+
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 
+@Entity
+@Table(name = "transfer")
 public class Transfer {
-    // properties
-    private long transferId;
-    private String transferTypeDesc;
-    private String transferStatusDesc;
-    private long accountFrom;
-    private long accountTo;
-    private BigDecimal amount;
 
-    public Transfer() {}
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "transfer_id")
+  private Long transferId;
 
-    public Transfer(long transferId, long accountFrom, long accountTo, BigDecimal amount, String transferTypeDesc, String transferStatusDesc) {
-        this.transferId = transferId;
-        this.transferTypeDesc = transferTypeDesc;
-        this.transferStatusDesc = transferStatusDesc;
-        this.accountFrom = accountFrom;
-        this.accountTo = accountTo;
-        this.amount = amount;
-    }
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "account_from", nullable = false)
+  private Account accountFrom;
 
-    // getters and setters
-    public long getTransferId() {
-        return transferId;
-    }
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "account_to", nullable = false)
+  private Account accountTo;
 
-    public void setTransferId(long transferId) {
-        this.transferId = transferId;
-    }
+  @Column(nullable = false, precision = 13, scale = 2)
+  private BigDecimal amount;
 
-    public long getAccountFrom() {
-        return accountFrom;
-    }
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "transfer_type_id", nullable = false)
+  private TransferType transferType;
 
-    public void setAccountFrom(long accountFrom) {
-        this.accountFrom = accountFrom;
-    }
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "transfer_status_id", nullable = false)
+  private TransferStatus transferStatus;
 
-    public long getAccountTo() {
-        return accountTo;
-    }
+  public Transfer() {}
 
-    public void setAccountTo(long accountTo) {
-        this.accountTo = accountTo;
-    }
+  public Transfer(
+      Account accountFrom,
+      Account accountTo,
+      BigDecimal amount,
+      TransferType transferType,
+      TransferStatus transferStatus) {
 
-    public BigDecimal getAmount() {
-        return amount;
-    }
+    this.accountFrom = accountFrom;
+    this.accountTo = accountTo;
+    this.amount = amount;
+    this.transferType = transferType;
+    this.transferStatus = transferStatus;
+  }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
+  public Long getTransferId() {
+    return transferId;
+  }
 
-    public String getTransferTypeDesc() {
-        return transferTypeDesc;
-    }
+  public void setTransferId(Long transferId) {
+    this.transferId = transferId;
+  }
 
-    public void setTransferTypeDesc(String transferTypeDesc) {
-        this.transferTypeDesc = transferTypeDesc;
-    }
+  public Account getAccountFrom() {
+    return accountFrom;
+  }
 
-    public String getTransferStatusDesc() {
-        return transferStatusDesc;
-    }
+  public void setAccountFrom(Account accountFrom) {
+    this.accountFrom = accountFrom;
+  }
 
-    public void setTransferStatusDesc(String transferStatusDesc) {
-        this.transferStatusDesc = transferStatusDesc;
-    }
+  public Account getAccountTo() {
+    return accountTo;
+  }
+
+  public void setAccountTo(Account accountTo) {
+    this.accountTo = accountTo;
+  }
+
+  public BigDecimal getAmount() {
+    return amount;
+  }
+
+  public void setAmount(BigDecimal amount) {
+    this.amount = amount;
+  }
+
+  public TransferType getTransferType() {
+    return transferType;
+  }
+
+  public void setTransferType(TransferType transferType) {
+    this.transferType = transferType;
+  }
+
+  public TransferStatus getTransferStatus() {
+    return transferStatus;
+  }
+
+  public void setTransferStatus(TransferStatus transferStatus) {
+    this.transferStatus = transferStatus;
+  }
 }
-

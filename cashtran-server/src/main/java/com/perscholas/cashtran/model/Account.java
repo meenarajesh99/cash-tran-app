@@ -1,45 +1,122 @@
 package com.perscholas.cashtran.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
+@Entity
+@Table(name = "account")
 public class Account {
-    // Properties
-    private long userId;
-    private long accountId;
-    private BigDecimal balance;
 
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "account_id")
+  private Long accountId;
 
-    public Account(){}
+  /*
+   * Account owns User relationship
+   *
+   * account table:
+   *
+   * account_id
+   * user_id  <-- FK
+   * balance
+   */
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false, unique = true)
+  private User user;
 
-    public Account(long userId, long accountId, BigDecimal balance) {
-        this.userId = userId;
-        this.accountId = accountId;
-        this.balance = balance;
+  @Column(nullable = false, precision = 13, scale = 2)
+  private BigDecimal balance = BigDecimal.ZERO;
+
+  /*
+   * Transfers sent from this account
+   */
+  @OneToMany(mappedBy = "accountFrom")
+  @JsonIgnore
+  private List<Transfer> outgoingTransfers = new ArrayList<>();
+
+  /*
+   * Transfers received by this account
+   */
+  @OneToMany(mappedBy = "accountTo")
+  @JsonIgnore
+  private List<Transfer> incomingTransfers = new ArrayList<>();
+
+  public Account() {}
+
+  public Account(User user, BigDecimal balance) {
+
+    this.user = user;
+    this.balance = balance;
+  }
+
+  public Long getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(Long accountId) {
+    this.accountId = accountId;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public void setUser(User user) {
+
+    this.user = user;
+
+    if (user != null && user.getAccount() != this) {
+
+      user.setAccount(this);
     }
+  }
 
-    // Getters and setters
-    public long getUserId() {
-        return userId;
-    }
+  public BigDecimal getBalance() {
+    return balance;
+  }
 
-    public void setUserId(long userId) {
-        this.userId = userId;
-    }
+  public void setBalance(BigDecimal balance) {
+    this.balance = balance;
+  }
 
-    public long getAccountId() {
-        return accountId;
-    }
+  public List<Transfer> getOutgoingTransfers() {
+    return outgoingTransfers;
+  }
 
-    public void setAccountId(long accountId) {
-        this.accountId = accountId;
-    }
+  public void setOutgoingTransfers(List<Transfer> outgoingTransfers) {
 
-    public BigDecimal getBalance() {
-        return balance;
-    }
+    this.outgoingTransfers = outgoingTransfers;
+  }
 
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
-    }
+  public List<Transfer> getIncomingTransfers() {
+    return incomingTransfers;
+  }
+
+  public void setIncomingTransfers(List<Transfer> incomingTransfers) {
+
+    this.incomingTransfers = incomingTransfers;
+  }
+
+  /*
+   * Convenience method for transfers sent
+   */
+  public void addOutgoingTransfer(Transfer transfer) {
+
+    outgoingTransfers.add(transfer);
+    transfer.setAccountFrom(this);
+  }
+
+  /*
+   * Convenience method for transfers received
+   */
+  public void addIncomingTransfer(Transfer transfer) {
+
+    incomingTransfers.add(transfer);
+    transfer.setAccountTo(this);
+  }
 }
-

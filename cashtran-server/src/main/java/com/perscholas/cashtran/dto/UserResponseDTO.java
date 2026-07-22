@@ -4,19 +4,37 @@ import com.perscholas.cashtran.model.User;
 
 public class UserResponseDTO {
 
-    private final long id;
-    private final String username;
+  private Long id;
+  private String username;
+  private String email;
+  private boolean activated;
 
-    public UserResponseDTO(User user) {
-        this.id = user.getId();
-        this.username = user.getUsername();
-    }
+  public UserResponseDTO(Long id, String username, String email, boolean activated) {
+    this.id = id;
+    this.username = username;
+    this.email = email;
+    this.activated = activated;
+  }
 
-    public long getId() {
-        return id;
-    }
+  public static UserResponseDTO from(User user) {
 
-    public String getUsername() {
-        return username;
-    }
+    return new UserResponseDTO(
+        user.getUserId(), user.getUsername(), user.getEmail(), user.isActivated());
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public boolean isActivated() {
+    return activated;
+  }
 }

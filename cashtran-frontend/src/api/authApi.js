@@ -3,8 +3,8 @@ import api from "./axiosClient";
 export const authLogin = (username, password) =>
   api.post("/api/auth/login", { username, password });
 
-export const authRegister = (username, password) =>
-  api.post("/api/auth/register", { username, password });
+export const authRegister = (username, password, email) =>
+  api.post("/api/auth/register", { username, password, email });
 
 export const getBalance = () => api.get("/api/balance"); // if you followed backend change, this will be /api/balance; if you want /api/accounts/balance change accordingly
 

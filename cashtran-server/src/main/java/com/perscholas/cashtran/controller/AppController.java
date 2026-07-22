@@ -1,14 +1,17 @@
 package com.perscholas.cashtran.controller;
 
-import com.perscholas.cashtran.repository.AccountRepository;
-import com.perscholas.cashtran.repository.TransferRepository;
-import com.perscholas.cashtran.repository.UserRepository;
+import com.perscholas.cashtran.dto.TransferDTO;
 import com.perscholas.cashtran.model.Account;
 import com.perscholas.cashtran.model.Transfer;
-import com.perscholas.cashtran.dto.TransferDTO;
 import com.perscholas.cashtran.model.User;
+
+import com.perscholas.cashtran.repository.AccountRepository;
+import com.perscholas.cashtran.repository.UserRepository;
+
+import com.perscholas.cashtran.service.TransferService;
+
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,125 +21,164 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-@PreAuthorize("isAuthenticated()")
 @RequestMapping("/api")
+@PreAuthorize("isAuthenticated()")
 public class AppController {
 
-    @Autowired
-    AccountRepository accountRepository;
+  private final AccountRepository accountRepository;
+  private final UserRepository userRepository;
+  private final TransferService transferService;
 
-    @Autowired
-    UserRepository userRepository;
+  public AppController(
+      AccountRepository accountRepository,
+      UserRepository userRepository,
+      TransferService transferService) {
 
-    @Autowired
-    TransferRepository transferRepository;
+    this.accountRepository = accountRepository;
+    this.userRepository = userRepository;
+    this.transferService = transferService;
+  }
 
-    // gets user balance
-    @GetMapping("/balance")
-    public BigDecimal getAccountBalance(Principal principal){
-        String username = principal.getName();
-        long userId = userRepository.findIdByUsername(username);
-        BigDecimal balance = accountRepository.getBalance(userId);
-        return balance;
-    }
+  /*
+   * Get logged-in user's balance
+   */
+  @GetMapping("/balance")
+  public BigDecimal getAccountBalance(Principal principal) {
 
-    // gets user account ID
-    @GetMapping("/account/{id}")
-    public Account getAccountByUserId(@PathVariable long id){
-        return accountRepository.getAnAccountByUserId(id);
-    }
+    User user =
+        userRepository
+            .findByUsername(principal.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
-    // gets user ID
-    @GetMapping("/user/{id}")
-    public long getUserIdByAccountId(@PathVariable long id){
-        return userRepository.findIdByAccountID(id);
-    }
+    Account account =
+        accountRepository
+            .findByUserId(user.getUserId())
+            .orElseThrow(() -> new RuntimeException("Account not found"));
 
-    // gets list of all users
-    @GetMapping("/users")
-    public List<User> getAllUsers(Principal principal){
-        String username = principal.getName();
-        long userID = userRepository.findIdByUsername(username);
-        return userRepository.findAll(userID);
-    }
+    return account.getBalance();
+  }
 
-    // gets list of transfers based on user
-    @GetMapping("/transfers")
-    public List<Transfer> listTransfers(Principal principal){
-        String username = principal.getName();
-        long userID = userRepository.findIdByUsername(username);
-        Account account = accountRepository.getAnAccountByUserId(userID);
-        long accountId = account.getAccountId();
-        List<Transfer> transferList = transferRepository.getAllApprovedTransfers(accountId);
-        return  transferList;
-    }
+  /*
+   * Get account by user id
+   */
+  @GetMapping("/account/{id}")
+  public Account getAccountByUserId(@PathVariable Long id) {
 
-    // gets list of pending transfers if any based on user
-    @GetMapping("/transfers/pending")
-    public List<Transfer> listPendingTransfers(Principal principal){
-        String username = principal.getName();
-        long userID = userRepository.findIdByUsername(username);
-        Account account = accountRepository.getAnAccountByUserId(userID);
-        long accountId = account.getAccountId();
-        List<Transfer> transferList = transferRepository.getAllPendingTransfers(accountId);
-        return  transferList;
-    }
+    return accountRepository
+        .findByUserId(id)
+        .orElseThrow(() -> new RuntimeException("Account not found"));
+  }
 
-    // gets active transfers
-    @GetMapping("/transfers/{transferId}")
-    public Transfer transferDetails (@PathVariable long transferId){
-        return transferRepository.getTransferById(transferId);
-    }
+  /*
+   * Get all users
+   */
+  @GetMapping("/users")
+  public List<User> getAllUsers() {
 
-    // send money (immediate transfer)
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/transfers/send")
-    public Transfer sendMoney(Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
-        String username = principal.getName();
-        long userID = userRepository.findIdByUsername(username);
-        Transfer transfer = transferRepository.newTransfer(userID, transferDTO.getUserId(), transferDTO.getAmount());
-        return transfer;
-    }
+    return userRepository.findAll();
+  }
 
-    // initializes requested transfer (for request workflow)
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/transfers")
-    public Transfer startTransfer (Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
-        String username = principal.getName();
-        long userID = userRepository.findIdByUsername(username);
-        Transfer transfer = transferRepository.newTransfer(userID, transferDTO.getUserId(), transferDTO.getAmount());
-        return transfer;
-    }
+  /*
+   * Get approved transfers
+   */
+  @GetMapping("/transfers")
+  public List<Transfer> listTransfers(Principal principal) {
 
-    // submits a transfer request
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/requests")
-    public Transfer requestTransfer(Principal principal, @Valid @RequestBody TransferDTO transferDTO){
-        String username = principal.getName();
-        long userId = userRepository.findIdByUsername(username);
-        Transfer transfer = transferRepository.newRequest(transferDTO.getUserId(), userId, transferDTO.getAmount());
-        return transfer;
-    }
+    User user = userRepository.findByUsername(principal.getName()).orElseThrow();
 
-    // submits acceptance to transfer request
-    @PutMapping("/transfer/{transferId}/accept")
-    public boolean acceptTransfer(Principal principal, @Valid @RequestBody TransferDTO transferDTO, @PathVariable long transferId) {
-        String usernameFrom = principal.getName();
-        long userFromId = userRepository.findIdByUsername(usernameFrom);
-        return transferRepository.acceptRequest(userFromId, transferDTO.getUserId(), transferDTO.getAmount(), transferId);
-    }
+    Account account = accountRepository.findByUserId(user.getUserId()).orElseThrow();
 
-    // submits rejection and cancels transfer request
-    @PutMapping("/transfer/{transferId}/reject")
-    public boolean rejectTransfer(Principal principal, @Valid @RequestBody TransferDTO transferDTO, @PathVariable long transferId) {
-        String usernameFrom = principal.getName();
-        long userFromId = userRepository.findIdByUsername(usernameFrom);
-        return transferRepository.rejectRequest(transferId);
-    }
+    return transferService.getApprovedTransfers(account.getAccountId());
+  }
 
-    // gets user account id based on username
-    @GetMapping("/username/{accountId}")
-    public String username (@PathVariable long accountId){
-        return userRepository.findUserByAccountID(accountId);
-    }
+  /*
+   * Get pending transfers
+   */
+  @GetMapping("/transfers/pending")
+  public List<Transfer> listPendingTransfers(Principal principal) {
+
+    User user = userRepository.findByUsername(principal.getName()).orElseThrow();
+
+    Account account = accountRepository.findByUserId(user.getUserId()).orElseThrow();
+
+    return transferService.getPendingTransfers(account.getAccountId());
+  }
+
+  /*
+   * Get transfer details
+   */
+  @GetMapping("/transfers/{transferId}")
+  public Transfer transferDetails(@PathVariable Long transferId) {
+
+    return transferService.getTransferById(transferId);
+  }
+
+  /*
+   * Send money immediately
+   */
+  @PostMapping("/transfers/send")
+  @ResponseStatus(HttpStatus.CREATED)
+  public Transfer sendMoney(Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
+
+    User sender = userRepository.findByUsername(principal.getName()).orElseThrow();
+
+    return transferService.createTransfer(
+        sender.getUserId(), transferDTO.getUserId(), transferDTO.getAmount());
+  }
+
+  /*
+   * Create transfer request
+   */
+  @PostMapping("/transfers")
+  @ResponseStatus(HttpStatus.CREATED)
+  public Transfer startTransfer(Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
+
+    User sender = userRepository.findByUsername(principal.getName()).orElseThrow();
+
+    return transferService.createTransfer(
+        sender.getUserId(), transferDTO.getUserId(), transferDTO.getAmount());
+  }
+
+  /*
+   * Request money
+   */
+  @PostMapping("/requests")
+  @ResponseStatus(HttpStatus.CREATED)
+  public Transfer requestTransfer(
+      Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
+
+    User requester = userRepository.findByUsername(principal.getName()).orElseThrow();
+
+    return transferService.createRequest(
+        transferDTO.getUserId(), requester.getUserId(), transferDTO.getAmount());
+  }
+
+  /*
+   * Accept transfer request
+   */
+  @PutMapping("/transfer/{transferId}/accept")
+  public boolean acceptTransfer(Principal principal, @PathVariable Long transferId) {
+
+    return transferService.acceptTransfer(transferId);
+  }
+
+  /*
+   * Reject transfer request
+   */
+  @PutMapping("/transfer/{transferId}/reject")
+  public boolean rejectTransfer(@PathVariable Long transferId) {
+
+    return transferService.rejectTransfer(transferId);
+  }
+
+  /*
+   * Find username from account id
+   */
+  @GetMapping("/username/{accountId}")
+  public String username(@PathVariable Long accountId) {
+
+    Account account = accountRepository.findById(accountId).orElseThrow();
+
+    return account.getUser().getUsername();
+  }
 }
