@@ -1,17 +1,15 @@
 package com.perscholas.cashtran.controller;
 
 import com.perscholas.cashtran.dto.TransferDTO;
+import com.perscholas.cashtran.dto.TransferResponseDTO;
+import com.perscholas.cashtran.dto.UserResponseDTO;
 import com.perscholas.cashtran.model.Account;
 import com.perscholas.cashtran.model.Transfer;
 import com.perscholas.cashtran.model.User;
-
 import com.perscholas.cashtran.repository.AccountRepository;
 import com.perscholas.cashtran.repository.UserRepository;
-
 import com.perscholas.cashtran.service.TransferService;
-
 import jakarta.validation.Valid;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -73,44 +71,58 @@ public class AppController {
    * Get all users
    */
   @GetMapping("/users")
-  public List<User> getAllUsers() {
-
-    return userRepository.findAll();
+  public List<UserResponseDTO> getAllUsers() {
+    return userRepository.findAll().stream().map(UserResponseDTO::from).toList();
   }
 
   /*
    * Get approved transfers
    */
   @GetMapping("/transfers")
-  public List<Transfer> listTransfers(Principal principal) {
-
-    User user = userRepository.findByUsername(principal.getName()).orElseThrow();
-
+  public List<TransferResponseDTO> listTransfers(Principal principal) {
+    User user = userRepository.findByUsernameWithAccount(principal.getName()).orElseThrow();
     Account account = accountRepository.findByUserId(user.getUserId()).orElseThrow();
-
-    return transferService.getApprovedTransfers(account.getAccountId());
+    return transferService.getApprovedTransfers(account.getAccountId()).stream()
+        .map(TransferResponseDTO::from)
+        .toList();
   }
 
   /*
    * Get pending transfers
    */
-  @GetMapping("/transfers/pending")
-  public List<Transfer> listPendingTransfers(Principal principal) {
+  @GetMapping("/transfers/pending/received")
+  public List<TransferResponseDTO> pendingReceived(Principal principal) {
 
-    User user = userRepository.findByUsername(principal.getName()).orElseThrow();
+    Account account =
+        accountRepository
+            .findByUsername(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Account not found"));
 
-    Account account = accountRepository.findByUserId(user.getUserId()).orElseThrow();
+    return transferService.getPendingRequestsReceived(account.getAccountId()).stream()
+        .map(TransferResponseDTO::from)
+        .toList();
+  }
 
-    return transferService.getPendingTransfers(account.getAccountId());
+  @GetMapping("/transfers/pending/sent")
+  public List<TransferResponseDTO> pendingSent(Principal principal) {
+
+    Account account =
+        accountRepository
+            .findByUsername(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Account not found"));
+
+    return transferService.getPendingRequestsSent(account.getAccountId()).stream()
+        .map(TransferResponseDTO::from)
+        .toList();
   }
 
   /*
    * Get transfer details
    */
   @GetMapping("/transfers/{transferId}")
-  public Transfer transferDetails(@PathVariable Long transferId) {
+  public TransferResponseDTO transferDetails(@PathVariable Long transferId) {
 
-    return transferService.getTransferById(transferId);
+    return TransferResponseDTO.from(transferService.getTransferById(transferId));
   }
 
   /*
@@ -118,12 +130,16 @@ public class AppController {
    */
   @PostMapping("/transfers/send")
   @ResponseStatus(HttpStatus.CREATED)
-  public Transfer sendMoney(Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
+  public TransferResponseDTO sendMoney(
+      Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
+    User sender = userRepository.findByUsernameWithAccount(principal.getName()).orElseThrow();
+    Transfer transfer =
+        transferService.createTransfer(
+            sender.getAccount().getAccountId(),
+            accountRepository.findByUserId(transferDTO.getUserId()).orElseThrow().getAccountId(),
+            transferDTO.getAmount());
 
-    User sender = userRepository.findByUsername(principal.getName()).orElseThrow();
-
-    return transferService.createTransfer(
-        sender.getUserId(), transferDTO.getUserId(), transferDTO.getAmount());
+    return TransferResponseDTO.from(transfer);
   }
 
   /*
@@ -131,12 +147,23 @@ public class AppController {
    */
   @PostMapping("/transfers")
   @ResponseStatus(HttpStatus.CREATED)
-  public Transfer startTransfer(Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
+  public TransferResponseDTO sendTransfer(
+      Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
 
-    User sender = userRepository.findByUsername(principal.getName()).orElseThrow();
+    User sender = userRepository.findByUsernameWithAccount(principal.getName()).orElseThrow();
 
-    return transferService.createTransfer(
-        sender.getUserId(), transferDTO.getUserId(), transferDTO.getAmount());
+    Account receiverAccount =
+        accountRepository
+            .findByUserId(transferDTO.getUserId())
+            .orElseThrow(() -> new RuntimeException("Receiver account not found"));
+
+    Transfer transfer =
+        transferService.createTransfer(
+            sender.getAccount().getAccountId(),
+            receiverAccount.getAccountId(),
+            transferDTO.getAmount());
+
+    return TransferResponseDTO.from(transfer);
   }
 
   /*
@@ -144,30 +171,45 @@ public class AppController {
    */
   @PostMapping("/requests")
   @ResponseStatus(HttpStatus.CREATED)
-  public Transfer requestTransfer(
+  public TransferResponseDTO requestTransfer(
       Principal principal, @Valid @RequestBody TransferDTO transferDTO) {
 
-    User requester = userRepository.findByUsername(principal.getName()).orElseThrow();
+    User requester = userRepository.findByUsernameWithAccount(principal.getName()).orElseThrow();
 
-    return transferService.createRequest(
-        transferDTO.getUserId(), requester.getUserId(), transferDTO.getAmount());
+    Account requestedUserAccount =
+        accountRepository
+            .findByUserId(transferDTO.getUserId())
+            .orElseThrow(() -> new RuntimeException("Requested user account not found"));
+
+    Transfer transfer =
+        transferService.createRequest(
+            requester.getAccount().getAccountId(),
+            requestedUserAccount.getAccountId(),
+            transferDTO.getAmount());
+
+    return TransferResponseDTO.from(transfer);
   }
 
   /*
    * Accept transfer request
    */
-  @PutMapping("/transfer/{transferId}/accept")
+  @PutMapping("/transfers/{transferId}/approve")
   public boolean acceptTransfer(Principal principal, @PathVariable Long transferId) {
+      User user =
+              userRepository.findByUsernameWithAccount(principal.getName())
+                      .orElseThrow();
 
-    return transferService.acceptTransfer(transferId);
+      return transferService.approveTransfer(
+              transferId,
+              user.getAccount().getAccountId()
+      );
   }
 
   /*
    * Reject transfer request
    */
-  @PutMapping("/transfer/{transferId}/reject")
+  @PutMapping("/transfers/{transferId}/reject")
   public boolean rejectTransfer(@PathVariable Long transferId) {
-
     return transferService.rejectTransfer(transferId);
   }
 
@@ -176,9 +218,7 @@ public class AppController {
    */
   @GetMapping("/username/{accountId}")
   public String username(@PathVariable Long accountId) {
-
     Account account = accountRepository.findById(accountId).orElseThrow();
-
     return account.getUser().getUsername();
   }
 }

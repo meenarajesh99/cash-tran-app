@@ -21,6 +21,7 @@ import {
 } from "@mui/material";
 
 import { Send, AccountBalanceWallet, ArrowBack } from "@mui/icons-material";
+import { AuthContext } from "../auth/AuthProvider";
 
 import { getUsers, sendTransfer } from "../api/authApi";
 
@@ -38,13 +39,23 @@ export default function SendTransfer() {
   const [loading, setLoading] = useState(false);
 
   const [openConfirm, setOpenConfirm] = useState(false);
+  const { user: loggedInUser } = React.useContext(AuthContext);
 
   async function loadUsers() {
     try {
       const response = await getUsers();
+      console.log("Logged in user:", loggedInUser);
+      console.log("Logged in user id:", loggedInUser?.id);
+      console.log("Users from backend:", response.data);
 
-      setUsers(response.data);
+      const otherUsers = response.data.filter(
+        (user) => Number(user.id) !== loggedInUser?.id,
+      );
+
+      setUsers(otherUsers);
     } catch (err) {
+      console.error(err);
+
       setMessage({
         type: "error",
         text: "Unable to load users",
@@ -53,24 +64,24 @@ export default function SendTransfer() {
   }
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    if (loggedInUser?.id) {
+      loadUsers();
+    }
+  }, [loggedInUser]);
 
-  const selectedUser = users.find((user) => user.id === Number(toUser));
+  const selectedUser = users.find((user) => Number(user.id) === Number(toUser));
 
   function validateAmount() {
     const value = Number(amount);
 
-    if (value <= 0) {
+    if (isNaN(value) || value <= 0) {
       setMessage({
         type: "error",
-
         text: "Amount must be greater than zero",
       });
 
       return false;
     }
-
     return true;
   }
 
@@ -83,19 +94,14 @@ export default function SendTransfer() {
 
     try {
       setLoading(true);
-
       setMessage(null);
-
       const response = await sendTransfer(Number(toUser), Number(amount));
-
       setMessage({
         type: "success",
-
         text: `Transfer successful. Transaction ID: ${response.data.transferId}`,
       });
 
       setAmount("");
-
       setToUser("");
     } catch (err) {
       setMessage({
@@ -110,14 +116,12 @@ export default function SendTransfer() {
 
   function submitForm(e) {
     e.preventDefault();
-
     if (!toUser) {
       setMessage({
         type: "error",
 
         text: "Please select a recipient",
       });
-
       return;
     }
 
@@ -127,7 +131,6 @@ export default function SendTransfer() {
 
         text: "Please enter an amount",
       });
-
       return;
     }
 
@@ -155,18 +158,12 @@ export default function SendTransfer() {
 
         <Paper
           elevation={5}
-
           sx={{
             p: 4,
-
             borderRadius: 5,
           }}
         >
-          <Box
-            textAlign="center"
-
-            mb={4}
-          >
+          <Box textAlign="center" mb={4}>
             <AccountBalanceWallet
               sx={{
                 fontSize: 65,
@@ -175,11 +172,7 @@ export default function SendTransfer() {
               }}
             />
 
-            <Typography
-              variant="h4"
-
-              fontWeight="bold"
-            >
+            <Typography variant="h4" fontWeight="bold">
               Send Money
             </Typography>
 
@@ -191,7 +184,6 @@ export default function SendTransfer() {
           {message && (
             <Alert
               severity={message.type}
-
               sx={{
                 mb: 3,
               }}
@@ -200,39 +192,19 @@ export default function SendTransfer() {
             </Alert>
           )}
 
-          <Box
-            component="form"
-
-            onSubmit={submitForm}
-          >
+          <Box component="form" onSubmit={submitForm}>
             <TextField
               select
-
               fullWidth
-
               label="Select Recipient"
-
               value={toUser}
-
               onChange={(e) => setToUser(e.target.value)}
-
               margin="normal"
             >
               {users.map((user) => (
-                <MenuItem
-                  key={user.id}
-
-                  value={user.id}
-                >
-                  <Box
-                    display="flex"
-
-                    alignItems="center"
-
-                    gap={2}
-                  >
+                <MenuItem key={user.id} value={String(user.id)}>
+                  <Box display="flex" alignItems="center" gap={2}>
                     <Avatar>{user.username?.charAt(0)?.toUpperCase()}</Avatar>
-
                     {user.username}
                   </Box>
                 </MenuItem>
@@ -241,20 +213,13 @@ export default function SendTransfer() {
 
             <TextField
               fullWidth
-
               label="Amount"
-
               type="number"
-
               value={amount}
-
               onChange={(e) => setAmount(e.target.value)}
-
               margin="normal"
-
               inputProps={{
                 min: 0.01,
-
                 step: 0.01,
               }}
 
@@ -271,27 +236,16 @@ export default function SendTransfer() {
 
                 sx={{
                   mt: 3,
-
                   p: 2,
-
                   borderRadius: 3,
                 }}
               >
                 <Typography>Sending money to:</Typography>
-
                 <Divider sx={{ my: 1 }} />
-
-                <Box
-                  display="flex"
-
-                  alignItems="center"
-
-                  gap={2}
-                >
+                <Box display="flex" alignItems="center" gap={2}>
                   <Avatar>
                     {selectedUser.username?.charAt(0)?.toUpperCase()}
                   </Avatar>
-
                   <Typography fontWeight="bold">
                     {selectedUser.username}
                   </Typography>
@@ -301,33 +255,20 @@ export default function SendTransfer() {
 
             <Button
               fullWidth
-
               type="submit"
-
               variant="contained"
-
               size="large"
-
               startIcon={<Send />}
-
               disabled={loading}
-
               sx={{
                 mt: 4,
-
                 py: 1.5,
-
                 borderRadius: 3,
-
                 fontWeight: "bold",
               }}
             >
               {loading ? (
-                <CircularProgress
-                  size={26}
-
-                  color="inherit"
-                />
+                <CircularProgress size={26} color="inherit" />
               ) : (
                 "Send Money"
               )}
@@ -338,13 +279,8 @@ export default function SendTransfer() {
 
       {/* Confirmation Dialog */}
 
-      <Dialog
-        open={openConfirm}
-
-        onClose={() => setOpenConfirm(false)}
-      >
+      <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
         <DialogTitle>Confirm Transfer</DialogTitle>
-
         <DialogContent>
           <Typography>
             Send <strong>${amount}</strong> to{" "}
@@ -354,13 +290,12 @@ export default function SendTransfer() {
 
         <DialogActions>
           <Button onClick={() => setOpenConfirm(false)}>Cancel</Button>
-
           <Button
             variant="contained"
-
             onClick={confirmTransfer}
+            disabled={loading}
           >
-            Confirm
+            {loading ? <CircularProgress size={24} /> : "Confirm"}
           </Button>
         </DialogActions>
       </Dialog>

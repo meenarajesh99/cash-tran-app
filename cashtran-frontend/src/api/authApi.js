@@ -16,3 +16,23 @@ export const getTransfer = (id) => api.get(`/api/transfers/${id}`);
 
 export const sendTransfer = (userId, amount) =>
   api.post("/api/transfers/send", { userId, amount });
+
+export const createMoneyRequest = (userId, amount) =>
+  api.post("/api/requests", {
+    userId,
+    amount,
+  });
+
+export const getPendingReceivedTransfers = () =>
+  api.get("/api/transfers/pending/received");
+
+export const getPendingSentTransfers = () =>
+  api.get("/api/transfers/pending/sent");
+
+export const approveTransfer = (transferId) => {
+  return api.put(`/api/transfers/${transferId}/approve`);
+};
+
+export const rejectTransfer = (transferId) => {
+  return api.put(`/api/transfers/${transferId}/reject`);
+};

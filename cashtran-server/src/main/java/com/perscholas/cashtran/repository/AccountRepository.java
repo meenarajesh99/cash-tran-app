@@ -17,4 +17,13 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findByUserId(
             @Param("userId") Long userId
     );
+
+    @Query("""
+    SELECT a
+    FROM Account a
+    WHERE a.user.username = :username
+""")
+    Optional<Account> findByUsername(
+            @Param("username") String username
+    );
 }

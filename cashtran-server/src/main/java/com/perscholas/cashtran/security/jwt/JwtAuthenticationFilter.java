@@ -38,6 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String token = extractTokenFromRequest(request);
+            log.info("JWT Filter called for: {}", request.getRequestURI());
+            log.info("Token exists: {}", token != null);
 
             if (StringUtils.hasText(token) && tokenProvider.validateToken(token)) {
                 Authentication authentication = tokenProvider.getAuthentication(token);

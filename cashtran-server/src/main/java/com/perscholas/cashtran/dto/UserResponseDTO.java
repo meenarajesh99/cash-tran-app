@@ -5,36 +5,67 @@ import com.perscholas.cashtran.model.User;
 public class UserResponseDTO {
 
   private Long id;
+  private Long accountId;
   private String username;
   private String email;
   private boolean activated;
 
-  public UserResponseDTO(Long id, String username, String email, boolean activated) {
-    this.id = id;
-    this.username = username;
-    this.email = email;
-    this.activated = activated;
-  }
-
   public static UserResponseDTO from(User user) {
 
-    return new UserResponseDTO(
-        user.getUserId(), user.getUsername(), user.getEmail(), user.isActivated());
+    UserResponseDTO dto = new UserResponseDTO();
+
+    dto.setId(user.getUserId());
+
+    dto.setUsername(user.getUsername());
+
+    dto.setEmail(user.getEmail());
+
+    dto.setActivated(user.isActivated());
+
+    if (user.getAccount() != null) {
+      dto.setAccountId(user.getAccount().getAccountId());
+    }
+
+    return dto;
   }
 
   public Long getId() {
     return id;
   }
 
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public Long getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(Long accountId) {
+    this.accountId = accountId;
+  }
+
   public String getUsername() {
     return username;
+  }
+
+  public void setUsername(String username) {
+    this.username = username;
   }
 
   public String getEmail() {
     return email;
   }
 
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
   public boolean isActivated() {
     return activated;
+  }
+
+  public void setActivated(boolean activated) {
+    this.activated = activated;
   }
 }

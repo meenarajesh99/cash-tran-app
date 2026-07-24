@@ -37,7 +37,15 @@ import {
   Refresh,
 } from "@mui/icons-material";
 
-import { getBalance, getTransfers } from "../api/authApi";
+import {
+  getBalance,
+  getTransfers,
+  getPendingSentTransfers,
+  getPendingReceivedTransfers,
+  approveTransfer,
+  rejectTransfer,
+} from "../api/authApi";
+
 import { AuthContext } from "../auth/AuthProvider";
 
 export default function Dashboard() {
@@ -47,6 +55,8 @@ export default function Dashboard() {
 
   const [balance, setBalance] = useState(null);
   const [transfers, setTransfers] = useState([]);
+  const [pendingReceived, setPendingReceived] = useState([]);
+  const [pendingSent, setPendingSent] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -58,17 +68,55 @@ export default function Dashboard() {
     setError(null);
 
     try {
-      const balanceResponse = await getBalance();
+      const [
+        balanceResponse,
+        transferResponse,
+        sentResponse,
+        receivedResponse,
+      ] = await Promise.all([
+        getBalance(),
+        getTransfers(),
+        getPendingSentTransfers(),
+        getPendingReceivedTransfers(),
+      ]);
+
       setBalance(balanceResponse.data);
 
-      const transferResponse = await getTransfers();
       setTransfers(transferResponse.data);
+
+      setPendingSent(sentResponse.data);
+
+      setPendingReceived(receivedResponse.data);
     } catch (err) {
       console.error(err);
 
       setError(err?.response?.data || "Unable to load dashboard information");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleApprove(transferId) {
+    try {
+      await approveTransfer(transferId);
+
+      await loadDashboard();
+    } catch (err) {
+      console.error(err);
+
+      setError(err?.response?.data || "Unable to approve transfer");
+    }
+  }
+
+  async function handleReject(transferId) {
+    try {
+      await rejectTransfer(transferId);
+
+      await loadDashboard();
+    } catch (err) {
+      console.error(err);
+
+      setError(err?.response?.data || "Unable to reject transfer");
     }
   }
 
@@ -101,21 +149,28 @@ export default function Dashboard() {
     t.transferStatusDesc?.toLowerCase().includes("approved"),
   ).length;
 
-  const pendingCount = transfers.filter((t) =>
-    t.transferStatusDesc?.toLowerCase().includes("pending"),
-  ).length;
+  const pendingCount = pendingReceived.length + pendingSent.length;
+
+  const allTransfers = [
+    ...transfers,
+    ...pendingSent.filter(
+      (p) => !transfers.some((t) => t.transferId === p.transferId),
+    ),
+    ...pendingReceived.filter(
+      (p) => !transfers.some((t) => t.transferId === p.transferId),
+    ),
+  ];
 
   return (
     <Box
       sx={{
         minHeight: "100vh",
+
         background: darkMode
           ? "linear-gradient(135deg,#111827,#1f2937)"
           : "linear-gradient(135deg,#e3f2fd,#ffffff)",
       }}
     >
-      {/* Top Navigation */}
-
       <AppBar position="static">
         <Toolbar>
           <AccountBalanceWallet
@@ -153,8 +208,6 @@ export default function Dashboard() {
           mb: 5,
         }}
       >
-        {/* Welcome Section */}
-
         <Box display="flex" alignItems="center" mb={4}>
           <Avatar
             sx={{
@@ -195,8 +248,7 @@ export default function Dashboard() {
           </Box>
         ) : (
           <>
-            {/* Statistics Cards */}
-
+            {" "}
             <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
                 <StatCard
@@ -230,9 +282,6 @@ export default function Dashboard() {
                 />
               </Grid>
             </Grid>
-
-            {/* Quick Actions */}
-
             <Paper
               sx={{
                 mt: 4,
@@ -272,13 +321,10 @@ export default function Dashboard() {
                 <ActionButton
                   text="Request Money"
                   icon={<RequestPage />}
-                  action={() => navigate("/request")}
+                  action={() => navigate("/request-money")}
                 />
               </Stack>
             </Paper>
-
-            {/* Transfers */}
-
             <Paper
               sx={{
                 mt: 4,
@@ -306,10 +352,10 @@ export default function Dashboard() {
                 }}
               />
 
-              {transfers.length === 0 ? (
+              {allTransfers.length === 0 ? (
                 <Typography>No transfers found.</Typography>
               ) : (
-                transfers.map((transfer) => (
+                allTransfers.map((transfer) => (
                   <Card
                     key={transfer.transferId}
                     sx={{
@@ -330,19 +376,67 @@ export default function Dashboard() {
                             Transfer #{transfer.transferId}
                           </Typography>
 
-                          <Typography>
-                            To Account: {transfer.accountTo}
-                          </Typography>
+                          <Box>
+                            {transfer.transferTypeDesc === "Request" ? (
+                              <Typography>
+                                {pendingReceived.some(
+                                  (item) =>
+                                    item.transferId === transfer.transferId,
+                                )
+                                  ? `${transfer.accountFromUsername} requested money from you`
+                                  : `You requested money from ${transfer.accountToUsername}`}
+                              </Typography>
+                            ) : (
+                              <Typography>
+                                {transfer.accountFromUsername === user?.username
+                                  ? `Sent to ${transfer.accountToUsername}`
+                                  : `Received from ${transfer.accountFromUsername}`}
+                              </Typography>
+                            )}
 
-                          <Typography>
-                            Amount: {formatCurrency(transfer.amount)}
-                          </Typography>
+                            <Typography>
+                              Amount: {formatCurrency(transfer.amount)}
+                            </Typography>
+                          </Box>
                         </Box>
 
-                        <Chip
-                          label={transfer.transferStatusDesc}
-                          color={statusColor(transfer.transferStatusDesc)}
-                        />
+                        <Box>
+                          {pendingReceived.some(
+                            (item) => item.transferId === transfer.transferId,
+                          ) && (
+                            <Box sx={{ mb: 1 }}>
+                              <Button
+                                size="small"
+                                variant="contained"
+                                color="success"
+                                onClick={() =>
+                                  handleApprove(transfer.transferId)
+                                }
+                                sx={{
+                                  mr: 1,
+                                }}
+                              >
+                                Approve
+                              </Button>
+
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                onClick={() =>
+                                  handleReject(transfer.transferId)
+                                }
+                              >
+                                Reject
+                              </Button>
+                            </Box>
+                          )}
+
+                          <Chip
+                            label={transfer.transferStatusDesc}
+                            color={statusColor(transfer.transferStatusDesc)}
+                          />
+                        </Box>
                       </Stack>
                     </CardContent>
                   </Card>

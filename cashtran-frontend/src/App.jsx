@@ -12,6 +12,7 @@ import SendTransfer from "./pages/SendTransfer";
 import { AuthContext } from "./auth/AuthProvider";
 
 import "./App.css";
+import RequestMoney from "./pages/RequestMoney.jsx";
 
 function ProtectedRoute({ children }) {
   const { user } = React.useContext(AuthContext);
@@ -44,7 +45,7 @@ function App() {
 
           element={
             <PublicRoute>
-              <LoginPage />
+              <Login />
             </PublicRoute>
           }
         />
@@ -54,7 +55,7 @@ function App() {
 
           element={
             <PublicRoute>
-              <RegisterPage />
+              <Register />
             </PublicRoute>
           }
         />
@@ -76,7 +77,7 @@ function App() {
 
           element={
             <ProtectedRoute>
-              <UsersPage />
+              <Users />
             </ProtectedRoute>
           }
         />
@@ -86,7 +87,7 @@ function App() {
 
           element={
             <ProtectedRoute>
-              <TransfersPage />
+              <Transfers />
             </ProtectedRoute>
           }
         />
@@ -96,7 +97,17 @@ function App() {
 
           element={
             <ProtectedRoute>
-              <SendMoneyPage />
+              <SendTransfer />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/request-money"
+
+          element={
+            <ProtectedRoute>
+              <RequestMoney />
             </ProtectedRoute>
           }
         />

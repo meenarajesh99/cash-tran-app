@@ -34,6 +34,7 @@ export default function UsersPage() {
     try {
       setLoading(true);
       const response = await getUsers();
+      console.log("API users:", response.data);
       setUsers(response.data);
       setFilteredUsers(response.data);
     } catch (err) {
@@ -149,6 +150,7 @@ export default function UsersPage() {
             {filteredUsers.map((user) => (
               <Grid item xs={12} sm={6} md={4} key={user.id}>
                 <Card
+                  onClick={() => navigate(`/transfer/send?user=${user.id}`)}
                   sx={{
                     borderRadius: 4,
                     transition: "0.3s",

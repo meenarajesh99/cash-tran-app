@@ -26,9 +26,7 @@ export function AuthProvider({ children }) {
 
     localStorage.setItem("cashtran_token", token);
 
-    setUser({
-      username,
-    });
+    setUser(resp.data.user);
 
     return resp;
   }
