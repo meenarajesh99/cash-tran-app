@@ -1,57 +1,58 @@
-# OS
-.DS_Store
-Thumbs.db
+HELP.md
+target/
+dist/
+node_modules/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
 
-# IDE / editors (workspace-level)
-.idea/
-.vscode/
-*.iml
-
-# Environment files (do not commit secrets)
 .env
+../.env
 .env.local
 .env.*.local
 *.pem
 *.key
 *.jks
-
-# Logs
+*.log
 logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
+cash-tran-app/.env
+cashtran-frontend/.env
 
-# Node / JS
-node_modules/
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
 
-# Java / Maven
-cashtran-server/target/
-target/
-
-# Build output
-dist/
-build/
-coverage/
-
-# Database / local dev data
+# Database
 db_data/
+*.sql.bak
 
-# Misc
-*.log
-*.bak
+# OS
+.DS_Store
+Thumbs.db
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+### VS Code ###
+.vscode/
 
 application.properties
 application-*.properties
-
-.agents/
-.project
-img.png
-img_1.png
-skills-lock.json
-
-target/
-**/target/
-
-tenmo*
-README.md
+!src/main/resources/application-neon.properties

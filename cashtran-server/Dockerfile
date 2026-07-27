@@ -6,6 +6,7 @@ WORKDIR /workspace
 RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 
 COPY pom.xml .
+RUN mvn dependency:go-offline
 COPY src ./src
 
 # Build with optimizations
