@@ -14,13 +14,12 @@ public class SwaggerConfig {
   public OpenAPI customOpenAPI() {
 
     return new OpenAPI()
-        .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
+        .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
         .components(
             new Components()
                 .addSecuritySchemes(
-                    "Bearer Authentication",
+                    "bearerAuth",
                     new SecurityScheme()
-                        .name("Bearer Authentication")
                         .type(SecurityScheme.Type.HTTP)
                         .scheme("bearer")
                         .bearerFormat("JWT")));
