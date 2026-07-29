@@ -12,7 +12,6 @@ services:
       POSTGRES_INITDB_ARGS: "-c max_connections=200 -c shared_buffers=256MB"
     volumes:
       - db_data_prod:/var/lib/postgresql/data
-      - ./database/cashtran.sql:/docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 10s
@@ -29,7 +28,7 @@ services:
   backend:
     build:
       context: ./cashtran-server
-      dockerfile: Dockerfile
+      dockerfile: cashtran-server/Dockerfile
     container_name: cashtran-backend-prod
     restart: on-failure:3
     environment:
@@ -58,13 +57,15 @@ services:
   frontend:
     build:
       context: ./cashtran-frontend
-      dockerfile: Dockerfile
+      dockerfile: cashtran-server/Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-https://api.example.com}
+        VITE_API_URL: /api
     container_name: cashtran-frontend-prod
     restart: on-failure:3
     networks:
       - cashtran-network-prod
+    ports:
+      - "80:80" # Map host port 80 to container port 80
     expose:
       - "80"
     logging:

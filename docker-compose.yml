@@ -10,7 +10,6 @@ services:
       POSTGRES_INITDB_ARGS: "-c max_connections=100"
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./database/cashtran.sql:/docker-entrypoint-initdb.d/01-init.sql
     ports:
       - "${DB_PORT:-5433}:5432"
     healthcheck:
