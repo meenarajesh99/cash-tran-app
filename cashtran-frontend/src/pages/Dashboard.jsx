@@ -379,12 +379,9 @@ export default function Dashboard() {
                           <Box>
                             {transfer.transferTypeDesc === "Request" ? (
                               <Typography>
-                                {pendingReceived.some(
-                                  (item) =>
-                                    item.transferId === transfer.transferId,
-                                )
-                                  ? `${transfer.accountFromUsername} requested money from you`
-                                  : `You requested money from ${transfer.accountToUsername}`}
+                                {transfer.accountFromUsername === user?.username
+                                  ? `You requested money from ${transfer.accountToUsername}`
+                                  : `${transfer.accountFromUsername} requested money from you`}
                               </Typography>
                             ) : (
                               <Typography>

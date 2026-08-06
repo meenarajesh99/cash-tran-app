@@ -15,8 +15,23 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
         FROM Transfer t
         WHERE t.accountFrom.accountId = :accountId
            OR t.accountTo.accountId = :accountId
+               ORDER BY t.createdAt DESC
     """)
   List<Transfer> findTransfersByAccount(@Param("accountId") Long accountId);
+
+    @Query("""
+    SELECT t
+    FROM Transfer t
+    WHERE t.transferStatus.transferStatusDesc = 'Completed'
+    AND (
+        t.accountFrom.accountId = :accountId
+        OR
+        t.accountTo.accountId = :accountId
+    )
+""")
+    List<Transfer> findCompletedTransfersByAccount(
+            @Param("accountId") Long accountId
+    );
 
     // Requests waiting for approval by this account (payer)
     @Query("""
@@ -58,5 +73,19 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
     """)
   List<Transfer> findTransfersByStatusAndAccount(
       @Param("status") String status, @Param("accountId") Long accountId);
+
+  @Query(
+      """
+        SELECT t
+        FROM Transfer t
+        WHERE (t.transferStatus.transferStatusDesc = 'Completed' OR t.transferStatus.transferStatusDesc = 'Approved')
+          AND (
+              t.accountFrom.accountId = :accountId
+              OR
+              t.accountTo.accountId = :accountId
+          )
+        ORDER BY t.createdAt DESC
+    """)
+  List<Transfer> findCompletedOrApprovedTransfersByAccount(@Param("accountId") Long accountId);
 
 }

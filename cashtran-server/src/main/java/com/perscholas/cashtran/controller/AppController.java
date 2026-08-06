@@ -10,7 +10,10 @@ import com.perscholas.cashtran.repository.AccountRepository;
 import com.perscholas.cashtran.repository.UserRepository;
 import com.perscholas.cashtran.service.TransferService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -195,14 +198,9 @@ public class AppController {
    */
   @PutMapping("/transfers/{transferId}/approve")
   public boolean acceptTransfer(Principal principal, @PathVariable Long transferId) {
-      User user =
-              userRepository.findByUsernameWithAccount(principal.getName())
-                      .orElseThrow();
+    User user = userRepository.findByUsernameWithAccount(principal.getName()).orElseThrow();
 
-      return transferService.approveTransfer(
-              transferId,
-              user.getAccount().getAccountId()
-      );
+    return transferService.approveTransfer(transferId, user.getAccount().getAccountId());
   }
 
   /*
@@ -220,5 +218,18 @@ public class AppController {
   public String username(@PathVariable Long accountId) {
     Account account = accountRepository.findById(accountId).orElseThrow();
     return account.getUser().getUsername();
+  }
+
+  @GetMapping(value = "/transfers/statement", produces = MediaType.APPLICATION_PDF_VALUE)
+  public ResponseEntity<byte[]> downloadStatement(Principal principal) {
+
+    byte[] pdf = transferService.generateStatement(principal.getName());
+
+    return ResponseEntity.ok()
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION,
+            "attachment; filename=CashTran_Transaction_History.pdf")
+        .contentType(MediaType.APPLICATION_PDF)
+        .body(pdf);
   }
 }

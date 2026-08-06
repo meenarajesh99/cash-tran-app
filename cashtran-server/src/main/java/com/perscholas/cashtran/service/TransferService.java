@@ -1,34 +1,36 @@
 package com.perscholas.cashtran.service;
 
-import com.perscholas.cashtran.model.Account;
-import com.perscholas.cashtran.model.Transfer;
-import com.perscholas.cashtran.model.TransferStatus;
-import com.perscholas.cashtran.model.TransferType;
-import com.perscholas.cashtran.repository.AccountRepository;
-import com.perscholas.cashtran.repository.TransferRepository;
-import com.perscholas.cashtran.repository.TransferStatusRepository;
-import com.perscholas.cashtran.repository.TransferTypeRepository;
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+import com.perscholas.cashtran.model.*;
+import com.perscholas.cashtran.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 @Transactional
 public class TransferService {
 
+  private final UserRepository userRepository;
   private final TransferRepository transferRepository;
   private final AccountRepository accountRepository;
   private final TransferStatusRepository transferStatusRepository;
   private final TransferTypeRepository transferTypeRepository;
 
   public TransferService(
+      UserRepository userRepository,
       TransferRepository transferRepository,
       AccountRepository accountRepository,
       TransferStatusRepository transferStatusRepository,
       TransferTypeRepository transferTypeRepository) {
-
+    this.userRepository = userRepository;
     this.transferRepository = transferRepository;
     this.accountRepository = accountRepository;
     this.transferStatusRepository = transferStatusRepository;
@@ -36,7 +38,9 @@ public class TransferService {
   }
 
   public List<Transfer> getApprovedTransfers(Long accountId) {
-    return transferRepository.findTransfersByStatusAndAccount("Approved", accountId);
+    // Return both immediate sends (Completed) and accepted requests (Approved)
+    // so the dashboard shows all finalized transfers for the account.
+    return transferRepository.findCompletedOrApprovedTransfersByAccount(accountId);
   }
 
   /**
@@ -91,10 +95,10 @@ public class TransferService {
     accountRepository.save(fromAccount);
     accountRepository.save(toAccount);
 
-    TransferStatus approvedStatus =
+    TransferStatus completed =
         transferStatusRepository
-            .findByTransferStatusDesc("Approved")
-            .orElseThrow(() -> new RuntimeException("Approved status not found"));
+            .findByTransferStatusDesc("Completed")
+            .orElseThrow(() -> new RuntimeException("Completed status not found"));
 
     TransferType sendType =
         transferTypeRepository
@@ -105,7 +109,7 @@ public class TransferService {
     transfer.setAccountFrom(fromAccount);
     transfer.setAccountTo(toAccount);
     transfer.setAmount(amount);
-    transfer.setTransferStatus(approvedStatus);
+    transfer.setTransferStatus(completed);
     transfer.setTransferType(sendType);
 
     return transferRepository.save(transfer);
@@ -222,5 +226,93 @@ public class TransferService {
     return transferRepository
         .findById(transferId)
         .orElseThrow(() -> new RuntimeException("Transfer not found"));
+  }
+
+  @Transactional(readOnly = true)
+  public byte[] generateStatement(String username) {
+
+    User user =
+        userRepository
+            .findByUsernameWithAccount(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    Account account =
+        accountRepository
+            .findByUserId(user.getUserId())
+            .orElseThrow(() -> new RuntimeException("Account not found"));
+
+    // Include both Completed (immediate sends) and Approved (accepted requests) so
+    // the PDF statement reflects all finalized transfers for the account.
+    List<Transfer> transfers =
+        transferRepository.findCompletedOrApprovedTransfersByAccount(account.getAccountId());
+
+    try {
+
+      ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+      Document document = new Document(PageSize.LETTER);
+
+      PdfWriter.getInstance(document, output);
+
+      document.open();
+
+      Font titleFont = new Font(Font.HELVETICA, 18, Font.BOLD);
+      Font headerFont = new Font(Font.HELVETICA, 12, Font.BOLD);
+      document.add(new Paragraph("CashTran Transaction Statement", titleFont));
+      document.add(new Paragraph(" "));
+      document.add(new Paragraph("Customer: " + username));
+      document.add(new Paragraph(" "));
+      document.add(new Paragraph("Generated: " + java.time.LocalDate.now()));
+      document.add(new Paragraph(" "));
+
+      PdfPTable table = new PdfPTable(7);
+      table.setWidthPercentage(100);
+      table.setWidths(new float[] {2.2f, 0.8f, 1.2f, 1.5f, 1.5f, 1.2f, 1.2f});
+      table.addCell(new Phrase("Date", headerFont));
+      table.addCell(new Phrase("ID", headerFont));
+      table.addCell(new Phrase("Type", headerFont));
+      table.addCell(new Phrase("From", headerFont));
+      table.addCell(new Phrase("To", headerFont));
+      table.addCell(new Phrase("Amount", headerFont));
+      table.addCell(new Phrase("Status", headerFont));
+
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+
+      for (Transfer transfer : transfers) {
+        String displayStatus;
+
+        if (transfer.getTransferType().getTransferTypeDesc().equalsIgnoreCase("Send")) {
+
+          displayStatus = "Completed";
+
+        } else {
+
+          displayStatus = transfer.getTransferStatus().getTransferStatusDesc();
+        }
+
+        table.addCell(transfer.getCreatedAt().format(formatter));
+
+        table.addCell(String.valueOf(transfer.getTransferId()));
+
+        table.addCell(transfer.getTransferType().getTransferTypeDesc());
+
+        table.addCell(transfer.getAccountFrom().getUser().getUsername());
+
+        table.addCell(transfer.getAccountTo().getUser().getUsername());
+
+        table.addCell("$" + transfer.getAmount().setScale(2, RoundingMode.HALF_UP));
+
+        table.addCell(displayStatus);
+      }
+
+      document.add(table);
+
+      document.close();
+
+      return output.toByteArray();
+
+    } catch (Exception ex) {
+      throw new RuntimeException("Unable to generate PDF statement", ex);
+    }
   }
 }

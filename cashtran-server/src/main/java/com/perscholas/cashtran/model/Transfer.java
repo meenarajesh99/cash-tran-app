@@ -3,6 +3,7 @@ package com.perscholas.cashtran.model;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "transfer")
@@ -31,6 +32,14 @@ public class Transfer {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "transfer_status_id", nullable = false)
   private TransferStatus transferStatus;
+
+  @Column(name = "created_at", nullable = false)
+  private LocalDateTime createdAt;
+
+  @PrePersist
+  public void prePersist() {
+    createdAt = LocalDateTime.now();
+  }
 
   public Transfer() {}
 
@@ -94,5 +103,13 @@ public class Transfer {
 
   public void setTransferStatus(TransferStatus transferStatus) {
     this.transferStatus = transferStatus;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
   }
 }

@@ -35,7 +35,7 @@ import {
   ArrowBack,
 } from "@mui/icons-material";
 
-import { getTransfers } from "../api/authApi";
+import { downloadTransactionHistory, getTransfers } from "../api/authApi";
 
 export default function TransfersPage() {
   const navigate = useNavigate();
@@ -95,13 +95,37 @@ export default function TransfersPage() {
     setFilteredTransfers(result);
   }
 
-  const approvedCount = transfers.filter((t) =>
-    t.transferStatusDesc?.toLowerCase().includes("approved"),
+  const completedCount = transfers.filter((t) =>
+    t.transferStatusDesc?.toLowerCase().includes("completed"),
   ).length;
 
   const pendingCount = transfers.filter((t) =>
     t.transferStatusDesc?.toLowerCase().includes("pending"),
   ).length;
+
+  async function handleDownloadTransactionHistory() {
+    try {
+      const response = await downloadTransactionHistory();
+      console.log(response.data);
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "CashTran_Transaction_History.pdf";
+
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to download statement");
+    }
+  }
 
   return (
     <Box
@@ -142,6 +166,15 @@ export default function TransfersPage() {
               <Typography color="text.secondary">
                 View all CashTran transactions
               </Typography>
+              <Box display="flex" justifyContent="flex-end" mb={3}>
+                <Button
+                  variant="contained"
+                  startIcon={<ReceiptLong />}
+                  onClick={handleDownloadTransactionHistory}
+                >
+                  Download Statement
+                </Button>
+              </Box>
             </Box>
           </Stack>
         </Paper>
@@ -163,8 +196,8 @@ export default function TransfersPage() {
           </Grid>
           <Grid item xs={12} md={4}>
             <SummaryCard
-              title="Approved"
-              value={approvedCount}
+              title="Completed"
+              value={completedCount}
               icon={<CheckCircle />}
             />
           </Grid>

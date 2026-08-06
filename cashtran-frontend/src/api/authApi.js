@@ -36,3 +36,8 @@ export const approveTransfer = (transferId) => {
 export const rejectTransfer = (transferId) => {
   return api.put(`/api/transfers/${transferId}/reject`);
 };
+export const downloadTransactionHistory = async () => {
+  return api.get("/api/transfers/statement", {
+    responseType: "blob",
+  });
+};
