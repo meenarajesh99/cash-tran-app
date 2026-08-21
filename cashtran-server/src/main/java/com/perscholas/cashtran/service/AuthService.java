@@ -12,29 +12,23 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
-    private final AuthenticationManager authenticationManager;
-    private final TokenProvider tokenProvider;
+  private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+  private final AuthenticationManager authenticationManager;
+  private final TokenProvider tokenProvider;
 
-    public AuthService(
-            AuthenticationManager authenticationManager,
-            TokenProvider tokenProvider) {
+  public AuthService(AuthenticationManager authenticationManager, TokenProvider tokenProvider) {
 
-        this.authenticationManager = authenticationManager;
-        this.tokenProvider = tokenProvider;
-    }
+    this.authenticationManager = authenticationManager;
+    this.tokenProvider = tokenProvider;
+  }
 
-    public String login(LoginDTO loginDTO) {
-        log.debug("Authenticating user '{}'", loginDTO.getUsername());
-        Authentication authentication =
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                loginDTO.getUsername(),
-                                loginDTO.getPassword()
-                        )
-                );
+  public String login(LoginDTO loginDTO) {
+    log.debug("Authenticating user '{}'", loginDTO.getUsername());
+    Authentication authentication =
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                loginDTO.getUsername(), loginDTO.getPassword()));
 
-
-        return tokenProvider.createToken(authentication);
-    }
+    return tokenProvider.createToken(authentication);
+  }
 }

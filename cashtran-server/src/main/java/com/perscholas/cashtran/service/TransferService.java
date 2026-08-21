@@ -203,12 +203,16 @@ public class TransferService {
   /*
    * Reject Request
    */
-  public boolean rejectTransfer(Long transferId) {
+  public boolean rejectTransfer(Long transferId, Long accountId) {
 
     Transfer transfer =
         transferRepository
             .findById(transferId)
             .orElseThrow(() -> new RuntimeException("Transfer not found"));
+
+    if (!transfer.getAccountTo().getAccountId().equals(accountId)) {
+      throw new RuntimeException("Only the requested user can reject this transfer");
+    }
 
     TransferStatus rejectedStatus =
         transferStatusRepository

@@ -26,7 +26,6 @@ class LoginDTOTest {
         login.setUsername("Username");
         login.setPassword("Password");
         String accurateDTO = login.toString();
-        assertEquals(accurateDTO, "LoginDTO{" + "username='" + "Username" + '\'' + ", password='" + "Password" + '\'' + '}');
+        assertEquals(accurateDTO, "LoginDTO{" + "username='" + "Username" + '\'' + ", password='" + "[PROTECTED]" + '\'' + '}');
     }
 }
-

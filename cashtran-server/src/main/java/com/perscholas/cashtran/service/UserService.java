@@ -6,8 +6,11 @@ import com.perscholas.cashtran.model.User;
 import com.perscholas.cashtran.repository.AccountRepository;
 import com.perscholas.cashtran.repository.AuthorityRepository;
 import com.perscholas.cashtran.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -69,14 +72,46 @@ public class UserService {
     accountRepository.save(account);
 
     try {
-        System.out.println("Preparing to send email to: " + savedUser.getEmail());
-        emailService.sendEmail(savedUser.getEmail(), savedUser.getUsername());
-        System.out.println("Welcome email sent successfully to: " + savedUser.getEmail());
+      System.out.println("Preparing to send email to: " + savedUser.getEmail());
+      emailService.sendEmail(savedUser.getEmail(), savedUser.getUsername());
+      System.out.println("Welcome email sent successfully to: " + savedUser.getEmail());
 
     } catch (Exception e) {
       System.err.println("Unable to send welcome email: " + e.getMessage());
     }
 
     return savedUser;
+  }
+
+  @Transactional
+  public User updateEmail(String username, String newEmail) {
+
+    User user =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    if (user.getEmail().equalsIgnoreCase(newEmail)) {
+      throw new RuntimeException("New email is the same as current email");
+    }
+
+    userRepository
+        .findByEmail(newEmail)
+        .ifPresent(
+            existingUser -> {
+              if (!existingUser.getUserId().equals(user.getUserId())) {
+                throw new RuntimeException("Email already registered");
+              }
+            });
+
+    user.setEmail(newEmail);
+
+    return userRepository.save(user);
+  }
+
+  public User getUserByUsername(String username) {
+    return userRepository
+        .findByUsername(username)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
   }
 }

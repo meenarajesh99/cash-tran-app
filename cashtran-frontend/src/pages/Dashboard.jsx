@@ -29,6 +29,7 @@ import {
   People,
   History,
   RequestPage,
+  Person,
   DarkMode,
   LightMode,
   TrendingUp,
@@ -300,6 +301,11 @@ export default function Dashboard() {
                 }}
                 spacing={2}
               >
+                <ActionButton
+                  text="My Account"
+                  icon={<Person />}
+                  action={() => navigate("/account")}
+                />
                 <ActionButton
                   text="Send Money"
                   icon={<Send />}

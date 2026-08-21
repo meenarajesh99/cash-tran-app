@@ -1,4 +1,5 @@
 import api from "./axiosClient";
+import axiosClient from "./axiosClient";
 
 export const authLogin = (username, password) =>
   api.post("/api/auth/login", { username, password });
@@ -36,8 +37,29 @@ export const approveTransfer = (transferId) => {
 export const rejectTransfer = (transferId) => {
   return api.put(`/api/transfers/${transferId}/reject`);
 };
+
+export const updateEmail = async (email) => {
+  const response = await axiosClient.put("/api/account/email", {
+    email,
+  });
+  return response.data;
+};
+
+export const forgotPassword = async (email) => {
+  return axiosClient.post("/api/auth/forgot-password", {
+    email,
+  });
+};
+
+export const resetPassword = async (token, password) => {
+  return axiosClient.post("/api/auth/reset-password", {
+    token,
+    password,
+  });
+};
 export const downloadTransactionHistory = async () => {
   return api.get("/api/transfers/statement", {
     responseType: "blob",
   });
 };
+export default api;

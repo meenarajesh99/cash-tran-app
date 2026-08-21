@@ -1,0 +1,112 @@
+package com.perscholas.cashtran.controller;
+
+import com.perscholas.cashtran.model.User;
+import com.perscholas.cashtran.repository.UserRepository;
+import com.perscholas.cashtran.security.jwt.TokenProvider;
+import com.perscholas.cashtran.service.AuthService;
+import com.perscholas.cashtran.service.PasswordResetService;
+import com.perscholas.cashtran.service.UserService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(AuthenticationController.class)
+@AutoConfigureMockMvc(addFilters = false)
+class AuthenticationControllerTest {
+
+  @Autowired MockMvc mockMvc;
+
+  @MockitoBean AuthService authService;
+
+  @MockitoBean UserRepository userRepository;
+
+  @MockitoBean UserService userService;
+
+  @MockitoBean PasswordResetService passwordResetService;
+
+  @MockitoBean TokenProvider tokenProvider;
+
+  @Test
+  void loginReturnsTokenAndPublicUserDetails() throws Exception {
+
+    User user = new User("alice", "encoded", "alice@example.com", true);
+
+    user.setUserId(7L);
+
+    when(authService.login(any())).thenReturn("jwt-token");
+
+    when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                                {
+                                    "username": "alice",
+                                    "password": "password"
+                                }
+                                """))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.token").value("jwt-token"))
+        .andExpect(jsonPath("$.user.id").value(7))
+        .andExpect(jsonPath("$.user.username").value("alice"))
+        .andExpect(jsonPath("$.user.email").value("alice@example.com"))
+        .andExpect(jsonPath("$.user.activated").value(true))
+        .andExpect(jsonPath("$.user.password").doesNotExist());
+  }
+
+  @Test
+  void registerCreatesUserAndRejectsInvalidEmail() throws Exception {
+
+    User saved = new User("alice", "encoded", "alice@example.com", true);
+
+    saved.setUserId(7L);
+
+    when(userService.createUser(any())).thenReturn(saved);
+
+    mockMvc
+        .perform(
+            post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                                {
+                                    "username": "alice",
+                                    "password": "password",
+                                    "email": "alice@example.com"
+                                }
+                                """))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.username").value("alice"))
+        .andExpect(jsonPath("$.email").value("alice@example.com"))
+        .andExpect(jsonPath("$.activated").value(true));
+
+    mockMvc
+        .perform(
+            post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                                {
+                                    "username": "alice",
+                                    "password": "password",
+                                    "email": "not-an-email"
+                                }
+                                """))
+        .andExpect(status().isBadRequest());
+  }
+}

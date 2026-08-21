@@ -35,6 +35,9 @@ export function AuthProvider({ children }) {
   async function register(username, password, email) {
     return authRegister(username, password, email);
   }
+  function updateUser(updatedUser) {
+    setUser(updatedUser);
+  }
 
   function logout() {
     setUser(null);
@@ -49,6 +52,7 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        updateUser,
       }}
     >
       {children}

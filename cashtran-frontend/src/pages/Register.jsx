@@ -27,6 +27,7 @@ import {
 import { AuthContext } from "../auth/AuthProvider";
 
 export default function RegisterPage() {
+  /*Get the register function from the application's authentication context.*/
   const { register } = React.useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -64,6 +65,8 @@ export default function RegisterPage() {
   }
 
   async function onSubmit(e) {
+    /*Normally, submitting an HTML form causes the browser to reload/navigate. React doesn't want that and says Stop the browser's normal form submission.
+       I'll handle it using JavaScript. */
     e.preventDefault();
 
     setError(null);
@@ -98,7 +101,7 @@ export default function RegisterPage() {
       setLoading(false);
     }
   }
-
+  /* Everything inside this describes what React should display - the visual part */
   return (
     <Box
       sx={{

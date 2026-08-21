@@ -2,6 +2,7 @@ package com.perscholas.cashtran.controller;
 
 import com.perscholas.cashtran.dto.TransferDTO;
 import com.perscholas.cashtran.dto.TransferResponseDTO;
+import com.perscholas.cashtran.dto.UpdateEmailDTO;
 import com.perscholas.cashtran.dto.UserResponseDTO;
 import com.perscholas.cashtran.model.Account;
 import com.perscholas.cashtran.model.Transfer;
@@ -9,6 +10,7 @@ import com.perscholas.cashtran.model.User;
 import com.perscholas.cashtran.repository.AccountRepository;
 import com.perscholas.cashtran.repository.UserRepository;
 import com.perscholas.cashtran.service.TransferService;
+import com.perscholas.cashtran.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.security.Principal;
@@ -29,15 +32,18 @@ public class AppController {
   private final AccountRepository accountRepository;
   private final UserRepository userRepository;
   private final TransferService transferService;
+  private final UserService userService;
 
   public AppController(
       AccountRepository accountRepository,
       UserRepository userRepository,
-      TransferService transferService) {
+      TransferService transferService,
+      UserService userService) {
 
     this.accountRepository = accountRepository;
     this.userRepository = userRepository;
     this.transferService = transferService;
+    this.userService = userService;
   }
 
   /*
@@ -49,25 +55,31 @@ public class AppController {
     User user =
         userRepository
             .findByUsername(principal.getName())
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
     Account account =
         accountRepository
             .findByUserId(user.getUserId())
-            .orElseThrow(() -> new RuntimeException("Account not found"));
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
 
     return account.getBalance();
   }
 
-  /*
-   * Get account by user id
-   */
-  @GetMapping("/account/{id}")
-  public Account getAccountByUserId(@PathVariable Long id) {
+  @PutMapping("/account/email")
+  public UserResponseDTO updateEmail(
+      Principal principal, @Valid @RequestBody UpdateEmailDTO request) {
 
-    return accountRepository
-        .findByUserId(id)
-        .orElseThrow(() -> new RuntimeException("Account not found"));
+    User updatedUser = userService.updateEmail(principal.getName(), request.getEmail());
+
+    return UserResponseDTO.from(updatedUser);
+  }
+
+  @GetMapping("/account")
+  public UserResponseDTO getMyAccount(Principal principal) {
+    User user = userService.getUserByUsername(principal.getName());
+
+    return UserResponseDTO.from(user);
   }
 
   /*
@@ -207,8 +219,10 @@ public class AppController {
    * Reject transfer request
    */
   @PutMapping("/transfers/{transferId}/reject")
-  public boolean rejectTransfer(@PathVariable Long transferId) {
-    return transferService.rejectTransfer(transferId);
+  public boolean rejectTransfer(Principal principal, @PathVariable Long transferId) {
+    User user = userRepository.findByUsernameWithAccount(principal.getName()).orElseThrow();
+
+    return transferService.rejectTransfer(transferId, user.getAccount().getAccountId());
   }
 
   /*

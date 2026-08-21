@@ -39,6 +39,7 @@ export default function LoginPage() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -56,6 +57,11 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(data.username, data.password);
+      if (rememberMe) {
+        localStorage.setItem("rememberedUser", data.username);
+      } else {
+        localStorage.removeItem("rememberedUser");
+      }
       navigate("/dashboard");
     } catch (err) {
       setError(err?.response?.data || err.message);
@@ -67,10 +73,10 @@ export default function LoginPage() {
   React.useEffect(() => {
     const remembered = localStorage.getItem("rememberedUser");
     if (remembered) {
-      setUsername(remembered);
+      setUsername("username", remembered);
       setRememberMe(true);
     }
-  }, []);
+  }, [setValue]);
 
   return (
     <Box
@@ -93,13 +99,6 @@ export default function LoginPage() {
           borderRadius: 5,
         }}
       >
-        {/* Theme Toggle */}
-        <Box display="flex" justifyContent="flex-end">
-          <IconButton onClick={() => setDarkMode(!darkMode)}>
-            {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
-        </Box>
-
         {/* Logo */}
         <Box textAlign="center" mb={4}>
           <AccountBalanceWalletIcon
