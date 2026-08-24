@@ -1,5 +1,6 @@
 package com.perscholas.cashtran.controller;
 
+import com.perscholas.cashtran.exception.EmailAlreadyRegisteredException;
 import com.perscholas.cashtran.model.Account;
 import com.perscholas.cashtran.model.User;
 import com.perscholas.cashtran.repository.AccountRepository;
@@ -105,6 +106,29 @@ class AppControllerTest {
         .andExpect(jsonPath("$.accountId").value(2L));
 
     verify(userService).updateEmail("payer", "newemail@example.com");
+  }
+
+  @Test
+  void updateEmailReturnsConflictWhenEmailAlreadyRegistered() throws Exception {
+
+    when(userService.updateEmail(anyString(), anyString()))
+        .thenThrow(new EmailAlreadyRegisteredException());
+
+    mockMvc
+        .perform(
+            put("/api/account/email")
+                .principal(() -> "payer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                                        {
+                                            "email": "existing@example.com"
+                                        }
+                                        """))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.message").value("Email already registered"));
+
+    verify(userService).updateEmail("payer", "existing@example.com");
   }
 
   @Test

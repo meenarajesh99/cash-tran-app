@@ -68,9 +68,9 @@ public class AppController {
 
   @PutMapping("/account/email")
   public UserResponseDTO updateEmail(
-      Principal principal, @Valid @RequestBody UpdateEmailDTO request) {
+      Principal principal, @Valid @RequestBody UpdateEmailDTO updateEmailDTO) {
 
-    User updatedUser = userService.updateEmail(principal.getName(), request.getEmail());
+    User updatedUser = userService.updateEmail(principal.getName(), updateEmailDTO.getEmail());
 
     return UserResponseDTO.from(updatedUser);
   }

@@ -266,6 +266,32 @@ describe("MyAccount", () => {
     expect(mockUpdateUser).not.toHaveBeenCalled();
   });
 
+  it("displays the API error when the email is already registered", async () => {
+    updateEmail.mockRejectedValue({
+      response: {
+        status: 409,
+        data: {
+          message: "Email already registered",
+        },
+      },
+    });
+
+    renderPage();
+
+    const emailInput = screen.getByRole("textbox", {
+      name: /email/i,
+    });
+
+    await user.clear(emailInput);
+    await user.type(emailInput, "existing@example.com");
+
+    await user.click(screen.getByRole("button", { name: /update email/i }));
+
+    expect(
+      await screen.findByText("Email already registered"),
+    ).toBeInTheDocument();
+  });
+
   it("disables the update button while the request is in progress", async () => {
     const user = userEvent.setup();
 

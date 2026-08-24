@@ -50,7 +50,7 @@ export default function MyAccount() {
 
       setError(
         err?.response?.data?.message ||
-          err?.response?.data ||
+          err?.response?.data?.error ||
           "Unable to update email.",
       );
     } finally {

@@ -1,5 +1,6 @@
 package com.perscholas.cashtran.service;
 
+import com.perscholas.cashtran.exception.EmailAlreadyRegisteredException;
 import com.perscholas.cashtran.model.Account;
 import com.perscholas.cashtran.model.Authority;
 import com.perscholas.cashtran.model.User;
@@ -100,7 +101,7 @@ public class UserService {
         .ifPresent(
             existingUser -> {
               if (!existingUser.getUserId().equals(user.getUserId())) {
-                throw new RuntimeException("Email already registered");
+                throw new EmailAlreadyRegisteredException();
               }
             });
 
