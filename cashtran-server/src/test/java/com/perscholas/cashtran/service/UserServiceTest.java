@@ -174,11 +174,12 @@ class UserServiceTest {
 
     when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
 
-    RuntimeException error =
+    org.springframework.web.server.ResponseStatusException error =
         assertThrows(
-            RuntimeException.class, () -> userService.updateEmail("alice", "ALICE@EXAMPLE.COM"));
+            org.springframework.web.server.ResponseStatusException.class,
+            () -> userService.updateEmail("alice", "ALICE@EXAMPLE.COM"));
 
-    assertEquals("New email is the same as current email", error.getMessage());
+    assertEquals("New email is the same as current email", error.getReason());
 
     assertEquals("Alice@example.com", user.getEmail());
 

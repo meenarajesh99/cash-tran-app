@@ -27,6 +27,12 @@ public class User {
   @Column(nullable = false)
   private boolean activated;
 
+//  @Column(nullable = false)
+//  private boolean mfaEnabled = false;
+//
+//    @Column(name = "phone_number", unique = true)
+//    private String phoneNumber;
+
   /*
    * User <-> Authority
    *
@@ -170,6 +176,22 @@ public class User {
       account = null;
     }
   }
+
+//    public String getPhoneNumber() {
+//        return phoneNumber;
+//    }
+//
+//    public void setPhoneNumber(String phoneNumber) {
+//        this.phoneNumber = phoneNumber;
+//    }
+//
+//    public boolean isMfaEnabled() {
+//        return mfaEnabled;
+//    }
+//
+//    public void setMfaEnabled(boolean mfaEnabled) {
+//        this.mfaEnabled = mfaEnabled;
+//    }
 
   @Override
   public boolean equals(Object o) {

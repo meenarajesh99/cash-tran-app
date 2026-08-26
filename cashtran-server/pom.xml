@@ -69,6 +69,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Twilio Verify for SMS Api -->
+        <dependency>
+            <groupId>com.twilio.sdk</groupId>
+            <artifactId>twilio</artifactId>
+            <version>12.1.1</version>
+        </dependency>
+
         <dependency>
             <groupId>me.paulschwarz</groupId>
             <artifactId>spring-dotenv</artifactId>

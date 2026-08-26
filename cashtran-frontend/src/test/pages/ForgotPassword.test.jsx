@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import ForgotPassword from "../../pages/ForgotPassword";
 import * as authApi from "../../api/authApi";
 import { MemoryRouter } from "react-router-dom";

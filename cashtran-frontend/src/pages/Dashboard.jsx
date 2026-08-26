@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -50,7 +50,7 @@ import {
 import { AuthContext } from "../auth/AuthProvider";
 
 export default function Dashboard() {
-  const { user, logout } = React.useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -122,7 +122,10 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    loadDashboard();
+    // Call loadDashboard inside an async IIFE to avoid calling setState synchronously inside the effect body
+    (async () => {
+      await loadDashboard();
+    })();
   }, []);
 
   function formatCurrency(amount) {

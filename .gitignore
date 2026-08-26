@@ -6,7 +6,7 @@ node_modules/
 !**/src/main/**
 !**/src/test/**
 
-.env
+cashtran-server/.env
 ../.env
 .env.local
 .env.*.local

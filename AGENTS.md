@@ -92,6 +92,28 @@ docker-compose logs -f db
 - **Route protection**: `ProtectedRoute` component requires authenticated user; redirects to `/login` if missing
 - **API layer** in `src/api/`: `authApi.js` exports functions (e.g., `sendTransfer(userId, amount)`), `axiosClient.js` handles interceptor
 
+### Recent Frontend fixes (2026-08-25)
+
+- Summary: lint and unit-test failures in the frontend were fixed so `npm run lint` reports no errors and all frontend tests pass locally.
+- Commands run (frontend folder):
+  - `npm run lint`
+  - `npm test`
+
+- Key changes made (files updated):
+  - `src/test/api/axiosClient.test.js` — mock `axios.create()` to return both `request` and `response` interceptor objects so the real client can register both interceptors in tests.
+  - `src/pages/MyAccount.jsx` — surface plain-string API error responses (when `response.data` is a string) so the UI and tests show the exact server message.
+  - `src/auth/AuthProvider.jsx` — use named React hook imports and add a small ESLint exception to avoid a fast-refresh rule; preserved existing behavior.
+  - `src/pages/*` (Login, Dashboard, SendTransfer, RequestMoney, Transfers, Users, ResetPassword, ForgotPassword) — replace default React imports with named hook imports, convert `React.useContext` to `useContext`, and wrap/inline async calls inside `useEffect` (async IIFE) to satisfy ESLint rules about calling setState in effects and exhaustive-deps.
+  - Test files updated to match helpers and to use `userEvent.setup()` consistently (`src/test/pages/MyAccount.test.jsx`, `src/test/auth/AuthProvider.test.jsx`, `src/test/App.test.jsx`, `src/test/pages/ForgotPassword.test.jsx`).
+
+- Result: After these changes the frontend test run completed with all tests passing (37 tests), and ESLint reported no errors (a few runtime React warnings remain during tests — see "Remaining issues" below).
+
+- Remaining issues / notes:
+  - Several tests emit React runtime warnings about props forwarded to DOM elements (e.g., `textAlign`, `justifyContent`, `InputProps`, `inputProps`, `alignItems`) coming from Material UI usage. These are warnings and do not fail tests, but the UI code can be adjusted to avoid forwarding those props to plain DOM nodes (use `sx` or ensure props are applied to MUI components rather than native DOM elements).
+  - There are a few console.log statements retained in components used in tests for debuggability. If you prefer a cleaner test output, we can remove or gate these logs behind a development-only flag.
+  - `AuthProvider.jsx` includes a small `eslint-disable` for the fast-refresh rule; an alternative is to move the context into its own file to satisfy the rule without disabling it.
+
+
 ### Backend Model Naming
 - Table: `cashtran_user`; Entity: `User`
 - Tables use snake_case; columns map to camelCase Java properties via JPA
@@ -142,3 +164,30 @@ docker-compose logs -f db
 | `docker-compose.yml`                                                                       | Service orchestration; sets env vars for all components; dependency ordering |
 | `cashtran-server/src/main/resources/db/migration/V1__after_jpa.sql`                        | DB schema; defines `cashtran_user`, `account`, `transfer` tables with constraints |
 
+## AI Coding Agent Rules
+
+- Do not expose, print, commit, or modify secrets such as JWT secrets,
+  database passwords, API keys, or credentials.
+- Before making significant changes, explain the proposed approach.
+- When modifying existing code, preserve the established architecture unless
+  there is a clear reason to improve it. If proposing an architectural change,
+  explain the tradeoffs first.
+- Prefer existing project patterns and dependencies over introducing new libraries.
+- Do not change database schema without creating or explaining the appropriate Flyway migration.
+- Run backend tests after backend changes.
+- Run `npm run build` after frontend changes.
+- Do not remove existing functionality unless explicitly requested.
+- Preserve existing JWT and Spring Security behavior unless the task specifically
+  requires changing authentication or authorization.
+- Check the existing implementation before creating duplicate functionality.
+- When fixing a bug, identify the root cause before modifying code.
+- After making changes, summarize:
+    1. Files changed
+    2. What changed
+    3. Tests/build commands executed
+    4. Any remaining issues
+
+## Testing Requirement
+
+Every new feature, bug fix, refactor, or behavior change must include
+appropriate automated tests or updates to existing tests.

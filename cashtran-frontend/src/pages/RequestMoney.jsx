@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { getUsers, createMoneyRequest } from "../api/authApi";
@@ -19,7 +19,7 @@ import {
 function RequestMoney() {
   const navigate = useNavigate();
 
-  const { user: loggedInUser } = React.useContext(AuthContext);
+  const { user: loggedInUser } = useContext(AuthContext);
 
   const [users, setUsers] = useState([]);
 

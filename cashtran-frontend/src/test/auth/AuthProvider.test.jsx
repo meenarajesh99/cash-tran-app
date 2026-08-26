@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import React from "react";
+import { useContext } from "react";
 
 const { authLogin, authRegister } = vi.hoisted(() => ({
   authLogin: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock("../../api/authApi", () => ({ authLogin, authRegister }));
 import { AuthContext, AuthProvider } from "../../auth/AuthProvider.jsx";
 
 function Consumer() {
-  const { user, login, logout, register } = React.useContext(AuthContext);
+  const { user, login, logout, register } = useContext(AuthContext);
   return (
     <>
       <span data-testid="username">{user?.username ?? "anonymous"}</span>

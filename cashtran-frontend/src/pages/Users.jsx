@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -46,7 +46,9 @@ export default function UsersPage() {
   }
 
   useEffect(() => {
-    loadUsers();
+    (async () => {
+      await loadUsers();
+    })();
   }, []);
 
   function handleSearch(value) {

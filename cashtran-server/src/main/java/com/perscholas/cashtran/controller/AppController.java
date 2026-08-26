@@ -233,7 +233,9 @@ public class AppController {
     Account account = accountRepository.findById(accountId).orElseThrow();
     return account.getUser().getUsername();
   }
-
+    /*
+     * Print transaction history as PDF
+     */
   @GetMapping(value = "/transfers/statement", produces = MediaType.APPLICATION_PDF_VALUE)
   public ResponseEntity<byte[]> downloadStatement(Principal principal) {
 

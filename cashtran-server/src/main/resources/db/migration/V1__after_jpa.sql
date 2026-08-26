@@ -1,8 +1,3 @@
-BEGIN TRANSACTION;
-
-DROP SEQUENCE IF EXISTS seq_transfer_id;
-
-
 CREATE TABLE transfer_type (
                                transfer_type_id BIGSERIAL NOT NULL,
                                transfer_type_desc varchar(10) NOT NULL,
@@ -79,7 +74,5 @@ INSERT INTO authority (authority_name)
 VALUES
     ('ROLE_USER'),
     ('ROLE_ADMIN') ON CONFLICT DO NOTHING;
-
-COMMIT;
 
 

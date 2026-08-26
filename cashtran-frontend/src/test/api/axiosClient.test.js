@@ -6,7 +6,7 @@ vi.mock("axios", () => ({ default: { create } }));
 
 describe("axios client", () => {
   beforeEach(() => {
-    create.mockReturnValue({ interceptors: { request: { use } } });
+    create.mockReturnValue({ interceptors: { request: { use }, response: { use } } });
   });
 
   it("attaches the CashTran token to authenticated requests", async () => {

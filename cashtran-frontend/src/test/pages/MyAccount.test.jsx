@@ -275,8 +275,9 @@ describe("MyAccount", () => {
         },
       },
     });
+    const user = userEvent.setup();
 
-    renderPage();
+    renderMyAccount();
 
     const emailInput = screen.getByRole("textbox", {
       name: /email/i,

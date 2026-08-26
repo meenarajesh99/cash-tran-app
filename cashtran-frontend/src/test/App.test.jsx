@@ -1,4 +1,4 @@
-import React from "react";
+// React import not required with the new JSX transform
 import { render, screen, cleanup } from "@testing-library/react";
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { AuthContext } from "../auth/AuthProvider";

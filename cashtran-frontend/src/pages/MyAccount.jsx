@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -25,8 +25,6 @@ export default function MyAccount() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    console.log("A. handleSubmit called");
-    console.log("B. email:", email);
 
     setSuccess("");
     setError("");
@@ -39,19 +37,22 @@ export default function MyAccount() {
     setLoading(true);
 
     try {
-      console.log("C. before updateEmail");
       const response = await updateEmail(email.trim());
-      console.log("D. updateEmail returned:", response);
       updateUser(response.data);
 
       setSuccess("Email updated successfully.");
     } catch (err) {
       console.error("E. UPDATE EMAIL ERROR:", err);
 
+      // If the API returns a plain string in response.data, show that string.
+      const apiData = err?.response?.data;
+
       setError(
-        err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          "Unable to update email.",
+        typeof apiData === "string"
+          ? apiData
+          : err?.response?.data?.message ||
+              err?.response?.data?.error ||
+              "Unable to update email.",
       );
     } finally {
       setLoading(false);

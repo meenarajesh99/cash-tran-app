@@ -1,4 +1,4 @@
-import React from "react";
+import { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../auth/AuthProvider";
 
@@ -22,19 +22,16 @@ import LockIcon from "@mui/icons-material/Lock";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
 import { useForm, Controller } from "react-hook-form";
 
 import CircularProgress from "@mui/material/CircularProgress";
-import Stack from "@mui/material/Stack";
 
 export default function LoginPage() {
-  const { login } = React.useContext(AuthContext);
+  const { login } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
 
   const {
     control,
@@ -47,10 +44,10 @@ export default function LoginPage() {
       password: "",
     },
   });
-  const [rememberMe, setRememberMe] = React.useState(false);
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [darkMode, setDarkMode] = React.useState(false);
-  const [error, setError] = React.useState(null);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [darkMode] = useState(false);
+  const [error, setError] = useState(null);
 
   async function onSubmit(data) {
     setLoading(true);
@@ -70,12 +67,14 @@ export default function LoginPage() {
     }
   }
 
-  React.useEffect(() => {
-    const remembered = localStorage.getItem("rememberedUser");
-    if (remembered) {
-      setUsername("username", remembered);
-      setRememberMe(true);
-    }
+  useEffect(() => {
+    (async () => {
+      const remembered = localStorage.getItem("rememberedUser");
+      if (remembered) {
+        setValue("username", remembered);
+        setRememberMe(true);
+      }
+    })();
   }, [setValue]);
 
   return (

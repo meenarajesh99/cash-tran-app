@@ -7,6 +7,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 @Service
 public class EmailService {
 
@@ -100,5 +103,96 @@ public class EmailService {
     helper.setText(htmlContent, true);
 
     mailSender.send(message);
+  }
+
+  public void sendTransferNotification(
+      String to,
+      String username,
+      String otherUsername,
+      BigDecimal amount,
+      String transferType,
+      String status)
+      throws MessagingException {
+
+    MimeMessage message = mailSender.createMimeMessage();
+    MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+    helper.setFrom(fromEmail);
+    helper.setTo(to);
+
+    String subject;
+
+    if ("Send".equalsIgnoreCase(transferType)) {
+      subject = "CashTran - You Received a Transfer";
+    } else if ("Approved".equalsIgnoreCase(status)) {
+      subject = "CashTran - Money Request Approved";
+    } else if ("Rejected".equalsIgnoreCase(status)) {
+      subject = "CashTran - Money Request Rejected";
+    } else {
+      subject = "CashTran - Money Request";
+    }
+
+    helper.setSubject(subject);
+
+    String htmlContent =
+        """
+                <html>
+                    <body>
+                        <h2>CashTran Transfer Notification</h2>
+
+                        <p>Hello %s,</p>
+
+                        <p>
+                            %s
+                        </p>
+
+                        <p>
+                            <strong>Other User:</strong> %s<br>
+                            <strong>Amount:</strong> $%s<br>
+                            <strong>Type:</strong> %s<br>
+                            <strong>Status:</strong> %s
+                        </p>
+
+                        <br>
+
+                        <p>
+                            Thanks,<br>
+                            CashTran Team
+                        </p>
+                    </body>
+                </html>
+                """
+            .formatted(
+                username,
+                getTransferMessage(transferType, status),
+                otherUsername,
+                amount.setScale(2, RoundingMode.HALF_UP),
+                transferType,
+                status);
+
+    helper.setText(htmlContent, true);
+
+    mailSender.send(message);
+  }
+
+  private String getTransferMessage(String transferType, String status) {
+
+    if ("Send".equalsIgnoreCase(transferType)) {
+      return "You have received a money transfer.";
+    }
+
+    if ("Pending".equalsIgnoreCase(status)) {
+      return "You have received a new money request.";
+    }
+
+    if ("Approved".equalsIgnoreCase(status)) {
+      return "Your money request has been approved.";
+    }
+
+    if ("Rejected".equalsIgnoreCase(status)) {
+      return "Your money request has been rejected.";
+    }
+
+    return "There has been an update to your CashTran transaction.";
   }
 }

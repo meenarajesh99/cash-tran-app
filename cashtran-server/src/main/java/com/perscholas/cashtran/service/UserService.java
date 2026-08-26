@@ -1,6 +1,7 @@
 package com.perscholas.cashtran.service;
 
 import com.perscholas.cashtran.exception.EmailAlreadyRegisteredException;
+import com.perscholas.cashtran.exception.UsernameAlreadyTakenException;
 import com.perscholas.cashtran.model.Account;
 import com.perscholas.cashtran.model.Authority;
 import com.perscholas.cashtran.model.User;
@@ -44,11 +45,11 @@ public class UserService {
 
   public User createUser(User user) {
     if (userRepository.existsByEmail(user.getEmail())) {
-      throw new RuntimeException("Email already registered");
+      throw new EmailAlreadyRegisteredException();
     }
 
     if (userRepository.existsByUsername(user.getUsername())) {
-      throw new RuntimeException("Username already taken");
+      throw new UsernameAlreadyTakenException();
     }
     user.setPassword(passwordEncoder.encode(user.getPassword()));
 
@@ -93,7 +94,8 @@ public class UserService {
             .orElseThrow(() -> new RuntimeException("User not found"));
 
     if (user.getEmail().equalsIgnoreCase(newEmail)) {
-      throw new RuntimeException("New email is the same as current email");
+      throw new org.springframework.web.server.ResponseStatusException(
+          org.springframework.http.HttpStatus.BAD_REQUEST, "New email is the same as current email");
     }
 
     userRepository

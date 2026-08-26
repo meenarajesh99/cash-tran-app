@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -39,34 +39,29 @@ export default function SendTransfer() {
   const [loading, setLoading] = useState(false);
 
   const [openConfirm, setOpenConfirm] = useState(false);
-  const { user: loggedInUser } = React.useContext(AuthContext);
-
-  async function loadUsers() {
-    try {
-      const response = await getUsers();
-      console.log("Logged in user:", loggedInUser);
-      console.log("Logged in user id:", loggedInUser?.id);
-      console.log("Users from backend:", response.data);
-
-      const otherUsers = response.data.filter(
-        (user) => Number(user.id) !== loggedInUser?.id,
-      );
-
-      setUsers(otherUsers);
-    } catch (err) {
-      console.error(err);
-
-      setMessage({
-        type: "error",
-        text: "Unable to load users",
-      });
-    }
-  }
+  const { user: loggedInUser } = useContext(AuthContext);
 
   useEffect(() => {
-    if (loggedInUser?.id) {
-      loadUsers();
-    }
+    if (!loggedInUser?.id) return;
+
+    (async () => {
+      try {
+        const response = await getUsers();
+
+        const otherUsers = response.data.filter(
+          (user) => Number(user.id) !== loggedInUser?.id,
+        );
+
+        setUsers(otherUsers);
+      } catch (err) {
+        console.error(err);
+
+        setMessage({
+          type: "error",
+          text: "Unable to load users",
+        });
+      }
+    })();
   }, [loggedInUser]);
 
   const selectedUser = users.find((user) => Number(user.id) === Number(toUser));
