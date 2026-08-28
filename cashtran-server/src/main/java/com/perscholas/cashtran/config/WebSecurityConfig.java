@@ -66,6 +66,10 @@ public class WebSecurityConfig {
                         "/api/auth/register",
                         "/api/auth/forgot-password",
                         "/api/auth/reset-password",
+                        "/api/auth/verify-reset-token",
+                        "/api/auth/verify-email",
+                        "/api/auth/resend-verification-email",
+                        "/api/auth/mfa/login",
                         "/actuator/health",
 
                         // Swagger

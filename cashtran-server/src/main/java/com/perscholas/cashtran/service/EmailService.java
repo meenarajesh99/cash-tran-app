@@ -1,7 +1,10 @@
 package com.perscholas.cashtran.service;
 
+import com.perscholas.cashtran.security.jwt.JwtAuthenticationFilter;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -13,6 +16,7 @@ import java.math.RoundingMode;
 @Service
 public class EmailService {
 
+  private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
   private final JavaMailSender mailSender;
   private final String fromEmail;
 
@@ -47,9 +51,9 @@ public class EmailService {
             .formatted(username);
 
     helper.setText(htmlContent, true);
-    System.out.println("Sending email through Gmail SMTP");
+    log.info("Sending welcome email to {}", to);
     mailSender.send(message);
-    System.out.println("SMTP accepted email");
+    log.info("Welcome email sent to {}", to);
   }
 
   public void sendPasswordResetEmail(String to, String username, String resetLink)

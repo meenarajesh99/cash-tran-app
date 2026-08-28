@@ -4,6 +4,19 @@ import axiosClient from "./axiosClient";
 export const authLogin = (username, password) =>
   api.post("/api/auth/login", { username, password });
 
+export const authMfaLogin = (mfaToken, code) =>
+  api.post("/api/auth/mfa/login", {
+    mfaToken,
+    code,
+  });
+
+export const verifyMfaLogin = async (mfaToken, code) => {
+  return axiosClient.post("/api/auth/mfa/login", {
+    mfaToken,
+    code,
+  });
+};
+
 export const authRegister = (username, password, email) =>
   api.post("/api/auth/register", { username, password, email });
 

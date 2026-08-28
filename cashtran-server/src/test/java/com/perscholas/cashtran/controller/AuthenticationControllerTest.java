@@ -1,9 +1,12 @@
 package com.perscholas.cashtran.controller;
 
+import com.perscholas.cashtran.dto.LoginDTO;
+import com.perscholas.cashtran.dto.LoginResultDTO;
 import com.perscholas.cashtran.model.User;
 import com.perscholas.cashtran.repository.UserRepository;
 import com.perscholas.cashtran.security.jwt.TokenProvider;
 import com.perscholas.cashtran.service.AuthService;
+import com.perscholas.cashtran.service.MfaService;
 import com.perscholas.cashtran.service.PasswordResetService;
 import com.perscholas.cashtran.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -36,6 +39,8 @@ class AuthenticationControllerTest {
 
   @MockitoBean PasswordResetService passwordResetService;
 
+  @MockitoBean MfaService mfaService;
+
   @MockitoBean TokenProvider tokenProvider;
 
   @Test
@@ -45,7 +50,17 @@ class AuthenticationControllerTest {
 
     user.setUserId(7L);
 
-    when(authService.login(any())).thenReturn("jwt-token");
+    /*
+     * AuthService now returns LoginResultDTO
+     * instead of just the JWT String.
+     *
+     * false = MFA is not required
+     * alice = username
+     * jwt-token = real JWT
+     */
+    LoginResultDTO loginResult = new LoginResultDTO(false, "alice", "jwt-token");
+
+    when(authService.login(any(LoginDTO.class))).thenReturn(loginResult);
 
     when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
 
@@ -55,11 +70,11 @@ class AuthenticationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
-                                {
-                                    "username": "alice",
-                                    "password": "password"
-                                }
-                                """))
+                                        {
+                                            "username": "alice",
+                                            "password": "password"
+                                        }
+                                        """))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.token").value("jwt-token"))
         .andExpect(jsonPath("$.user.id").value(7))
@@ -67,6 +82,42 @@ class AuthenticationControllerTest {
         .andExpect(jsonPath("$.user.email").value("alice@example.com"))
         .andExpect(jsonPath("$.user.activated").value(true))
         .andExpect(jsonPath("$.user.password").doesNotExist());
+  }
+
+  @Test
+  void loginReturnsMfaChallengeWhenMfaEnabled() throws Exception {
+
+    User user = new User("alice", "encoded", "alice@example.com", true);
+
+    user.setUserId(7L);
+    user.setMfaEnabled(true);
+
+    /*
+     * The token here is NOT the normal JWT.
+     *
+     * It is the temporary MFA challenge token.
+     */
+    LoginResultDTO loginResult = new LoginResultDTO(true, "alice", "mfa-challenge-token");
+
+    when(authService.login(any(LoginDTO.class))).thenReturn(loginResult);
+
+    when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                                        {
+                                            "username": "alice",
+                                            "password": "password"
+                                        }
+                                        """))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.mfaRequired").value(true))
+        .andExpect(jsonPath("$.token").value("mfa-challenge-token"))
+        .andExpect(jsonPath("$.user").doesNotExist());
   }
 
   @Test
@@ -84,12 +135,12 @@ class AuthenticationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
-                                {
-                                    "username": "alice",
-                                    "password": "password",
-                                    "email": "alice@example.com"
-                                }
-                                """))
+                                        {
+                                            "username": "alice",
+                                            "password": "password",
+                                            "email": "alice@example.com"
+                                        }
+                                        """))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.username").value("alice"))
         .andExpect(jsonPath("$.email").value("alice@example.com"))
@@ -101,12 +152,12 @@ class AuthenticationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
-                                {
-                                    "username": "alice",
-                                    "password": "password",
-                                    "email": "not-an-email"
-                                }
-                                """))
+                                        {
+                                            "username": "alice",
+                                            "password": "password",
+                                            "email": "not-an-email"
+                                        }
+                                        """))
         .andExpect(status().isBadRequest());
   }
 }

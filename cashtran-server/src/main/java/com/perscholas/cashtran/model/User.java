@@ -27,11 +27,11 @@ public class User {
   @Column(nullable = false)
   private boolean activated;
 
-//  @Column(nullable = false)
-//  private boolean mfaEnabled = false;
-//
-//    @Column(name = "phone_number", unique = true)
-//    private String phoneNumber;
+  @Column(name = "mfa_enabled", nullable = false)
+  private boolean mfaEnabled = false;
+
+  @Column(name = "mfa_secret")
+  private String mfaSecret;
 
   /*
    * User <-> Authority
@@ -112,6 +112,22 @@ public class User {
     this.activated = activated;
   }
 
+  public boolean isMfaEnabled() {
+    return mfaEnabled;
+  }
+
+  public void setMfaEnabled(boolean mfaEnabled) {
+    this.mfaEnabled = mfaEnabled;
+  }
+
+  public String getMfaSecret() {
+    return mfaSecret;
+  }
+
+  public void setMfaSecret(String mfaSecret) {
+    this.mfaSecret = mfaSecret;
+  }
+
   /*
    * Required by Spring Security UserDetails
    */
@@ -177,22 +193,6 @@ public class User {
     }
   }
 
-//    public String getPhoneNumber() {
-//        return phoneNumber;
-//    }
-//
-//    public void setPhoneNumber(String phoneNumber) {
-//        this.phoneNumber = phoneNumber;
-//    }
-//
-//    public boolean isMfaEnabled() {
-//        return mfaEnabled;
-//    }
-//
-//    public void setMfaEnabled(boolean mfaEnabled) {
-//        this.mfaEnabled = mfaEnabled;
-//    }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -224,6 +224,10 @@ public class User {
         + '\''
         + ", activated="
         + activated
+        + ", mfaEnabled="
+        + mfaEnabled
+        + ", authorities="
+        + authorities
         + '}';
   }
 }

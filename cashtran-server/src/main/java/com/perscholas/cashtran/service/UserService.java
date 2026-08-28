@@ -79,7 +79,8 @@ public class UserService {
       System.out.println("Welcome email sent successfully to: " + savedUser.getEmail());
 
     } catch (Exception e) {
-      System.err.println("Unable to send welcome email: " + e.getMessage());
+      System.err.println(
+          "Unable to send welcome email: " + savedUser.getEmail() + ": " + e.getMessage());
     }
 
     return savedUser;
@@ -95,7 +96,8 @@ public class UserService {
 
     if (user.getEmail().equalsIgnoreCase(newEmail)) {
       throw new org.springframework.web.server.ResponseStatusException(
-          org.springframework.http.HttpStatus.BAD_REQUEST, "New email is the same as current email");
+          org.springframework.http.HttpStatus.BAD_REQUEST,
+          "New email is the same as current email");
     }
 
     userRepository

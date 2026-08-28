@@ -69,11 +69,11 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Twilio Verify for SMS Api -->
+        <!-- Google Authenticator for 2FA -->
         <dependency>
-            <groupId>com.twilio.sdk</groupId>
-            <artifactId>twilio</artifactId>
-            <version>12.1.1</version>
+            <groupId>dev.samstevens.totp</groupId>
+            <artifactId>totp</artifactId>
+            <version>1.7.1</version>
         </dependency>
 
         <dependency>
