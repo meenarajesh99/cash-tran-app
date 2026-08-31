@@ -14,11 +14,12 @@ RUN mvn -e -B -DskipTests \
     -Dorg.slf4j.simpleLogger.defaultLogLevel=warn \
     package
 
+
 # Stage 2: run
 FROM eclipse-temurin:21-jre-alpine
 
-# Install curl for healthchecks and security updates
-RUN apk add --no-cache curl
+# Install curl for healthchecks and wget for OpenTelemetry agent
+RUN apk add --no-cache curl wget
 
 WORKDIR /app
 
@@ -26,6 +27,10 @@ WORKDIR /app
 RUN addgroup -g 1000 appgroup && \
     adduser -D -u 1000 -G appgroup appuser && \
     chown -R appuser:appgroup /app
+
+# Download OpenTelemetry Java Agent
+RUN wget -O /app/opentelemetry-javaagent.jar \
+    https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
 
 USER appuser
 
@@ -37,4 +42,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-javaagent:/app/opentelemetry-javaagent.jar", "-jar", "/app/app.jar"]

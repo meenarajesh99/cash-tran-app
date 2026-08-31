@@ -88,7 +88,6 @@ class AuthenticationControllerTest {
   void loginReturnsMfaChallengeWhenMfaEnabled() throws Exception {
 
     User user = new User("alice", "encoded", "alice@example.com", true);
-
     user.setUserId(7L);
     user.setMfaEnabled(true);
 
@@ -98,9 +97,7 @@ class AuthenticationControllerTest {
      * It is the temporary MFA challenge token.
      */
     LoginResultDTO loginResult = new LoginResultDTO(true, "alice", "mfa-challenge-token");
-
     when(authService.login(any(LoginDTO.class))).thenReturn(loginResult);
-
     when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
 
     mockMvc
@@ -116,7 +113,8 @@ class AuthenticationControllerTest {
                                         """))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.mfaRequired").value(true))
-        .andExpect(jsonPath("$.token").value("mfa-challenge-token"))
+        .andExpect(jsonPath("$.token").doesNotExist())
+        .andExpect(jsonPath("$.mfaToken").value("mfa-challenge-token"))
         .andExpect(jsonPath("$.user").doesNotExist());
   }
 
