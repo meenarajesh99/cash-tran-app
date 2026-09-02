@@ -1,6 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect } from "react";
-import { authLogin, authMfaLogin, authRegister } from "../api/authApi";
+import {
+  authLogin,
+  authMfaLogin,
+  authRegister,
+  verifyMfaSetup,
+} from "../api/authApi";
 
 export const AuthContext = createContext(null);
 
@@ -66,6 +71,9 @@ export function AuthProvider({ children }) {
 
     return resp;
   }
+  async function completeMfaSetup(enrollmentToken, code) {
+    return verifyMfaSetup(enrollmentToken, code);
+  }
 
   async function register(username, password, email) {
     return authRegister(username, password, email);
@@ -89,6 +97,7 @@ export function AuthProvider({ children }) {
         register,
         logout,
         updateUser,
+        completeMfaSetup,
       }}
     >
       {children}

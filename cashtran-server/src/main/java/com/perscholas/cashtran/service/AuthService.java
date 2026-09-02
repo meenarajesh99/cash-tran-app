@@ -50,6 +50,11 @@ public class AuthService {
         userRepository
             .findByUsername(loginDTO.getUsername())
             .orElseThrow(() -> new RuntimeException("User not found"));
+      log.info(
+              "MFA status for user '{}': {}",
+              user.getUsername(),
+              user.isMfaEnabled()
+      );
 
     /*
      * 3. MFA enabled?

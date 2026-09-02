@@ -1,5 +1,6 @@
 package com.perscholas.cashtran.dto;
 
+import com.perscholas.cashtran.model.Account;
 import com.perscholas.cashtran.model.User;
 
 public class UserResponseDTO {
@@ -15,15 +16,14 @@ public class UserResponseDTO {
     UserResponseDTO dto = new UserResponseDTO();
 
     dto.setId(user.getUserId());
-
     dto.setUsername(user.getUsername());
-
     dto.setEmail(user.getEmail());
-
     dto.setActivated(user.isActivated());
 
-    if (user.getAccount() != null) {
-      dto.setAccountId(user.getAccount().getAccountId());
+    Account account = user.getAccount();
+
+    if (account != null) {
+      dto.setAccountId(account.getAccountId());
     }
 
     return dto;

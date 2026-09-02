@@ -69,6 +69,7 @@ public class WebSecurityConfig {
                         "/api/auth/verify-reset-token",
                         "/api/auth/verify-email",
                         "/api/auth/resend-verification-email",
+                        "/api/auth/mfa/enroll",
                         "/api/auth/mfa/login",
                         "/actuator/health",
 

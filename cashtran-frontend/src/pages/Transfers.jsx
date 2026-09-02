@@ -154,7 +154,7 @@ export default function TransfersPage() {
             mb: 4,
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={2}>
+          <Stack sx={{ flexDirection: "row", alignItems: "center" }} spacing={2}>
             <History
               color="primary"
               sx={{
@@ -168,7 +168,7 @@ export default function TransfersPage() {
               <Typography color="text.secondary">
                 View all CashTran transactions
               </Typography>
-              <Box display="flex" justifyContent="flex-end" mb={3}>
+               <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
                 <Button
                   variant="contained"
                   startIcon={<ReceiptLong />}
@@ -218,13 +218,12 @@ export default function TransfersPage() {
             borderRadius: 4,
           }}
         >
-          <Stack direction="row" spacing={2} mb={3}>
-            <TextField
+          <Stack spacing={2} sx={{ flexDirection: "row", mb: 3 }}>
+             <TextField
               fullWidth
               placeholder="Search transfers..."
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              InputAdornmentProps
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -237,12 +236,12 @@ export default function TransfersPage() {
               <Refresh />
             </IconButton>
           </Stack>
-          {loading ? (
-            <Box display="flex" justifyContent="center" p={5}>
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 5 }}>
               <CircularProgress />
             </Box>
-          ) : filteredTransfers.length === 0 ? (
-            <Typography textAlign="center" p={4}>
+            ) : filteredTransfers.length === 0 ? (
+              <Typography align="center" p={4}>
               No transfers found.
             </Typography>
           ) : (
@@ -306,11 +305,7 @@ function SummaryCard({ title, value, icon }) {
       }}
     >
       <CardContent>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
+        <Stack sx={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Box>
             <Typography color="text.secondary">{title}</Typography>
 

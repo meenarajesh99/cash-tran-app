@@ -88,7 +88,7 @@ export default function UsersPage() {
             borderRadius: 4,
           }}
         >
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <PeopleIcon
               color="primary"
               sx={{
@@ -134,7 +134,7 @@ export default function UsersPage() {
         />
 
         {loading ? (
-          <Box display="flex" justifyContent="center" mt={5}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
             <CircularProgress size={60} />
           </Box>
         ) : filteredUsers.length === 0 ? (
@@ -163,7 +163,7 @@ export default function UsersPage() {
                   }}
                 >
                   <CardContent>
-                    <Box display="flex" alignItems="center" gap={2}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <Avatar
                         sx={{
                           width: 55,

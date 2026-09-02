@@ -124,6 +124,12 @@ class AuthenticationControllerTest {
     User saved = new User("alice", "encoded", "alice@example.com", true);
 
     saved.setUserId(7L);
+    
+    // Mock the Account on the saved User
+    com.perscholas.cashtran.model.Account mockAccount = 
+        new com.perscholas.cashtran.model.Account();
+    mockAccount.setAccountId(1L);
+    saved.setAccount(mockAccount);
 
     when(userService.createUser(any())).thenReturn(saved);
 

@@ -55,8 +55,15 @@ public class TransferService {
    * <p>Example: Bob owes Alice money request. Bob sees this and can Approve/Reject.
    */
   public List<Transfer> getPendingRequestsReceived(Long accountId) {
-
-    return transferRepository.findPendingReceivedTransfers("Pending", accountId);
+    // Include both Pending and Rejected so that requesters and payers can see
+    // the lifecycle of a request (for example, a rejected request should still
+    // be visible in dashboards with status "Rejected").
+    List<Transfer> pending = transferRepository.findPendingReceivedTransfers("Pending", accountId);
+    List<Transfer> rejected = transferRepository.findPendingReceivedTransfers("Rejected", accountId);
+    pending.addAll(rejected);
+    // Optionally sort by createdAt descending so newest items appear first
+    pending.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+    return pending;
   }
 
   /**
@@ -65,8 +72,13 @@ public class TransferService {
    * <p>Example: Alice requested money from Bob. Alice sees this as waiting.
    */
   public List<Transfer> getPendingRequestsSent(Long accountId) {
-
-    return transferRepository.findPendingSentTransfers("Pending", accountId);
+    // Include both Pending and Rejected so the requester can see if their
+    // request was subsequently rejected.
+    List<Transfer> pending = transferRepository.findPendingSentTransfers("Pending", accountId);
+    List<Transfer> rejected = transferRepository.findPendingSentTransfers("Rejected", accountId);
+    pending.addAll(rejected);
+    pending.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+    return pending;
   }
 
   /*

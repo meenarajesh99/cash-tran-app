@@ -28,6 +28,7 @@ class UserServiceTest {
   @Mock AuthorityRepository authorityRepository;
   @Mock AccountRepository accountRepository;
   @Mock PasswordEncoder passwordEncoder;
+  @Mock MfaService mfaService;
   @InjectMocks UserService userService;
 
   @Test
@@ -39,6 +40,7 @@ class UserServiceTest {
     Authority role = new Authority("ROLE_USER");
     when(authorityRepository.findByAuthorityName("ROLE_USER")).thenReturn(Optional.of(role));
     when(passwordEncoder.encode("plain")).thenReturn("encoded");
+    when(mfaService.generateSecret()).thenReturn("test-secret-123");
     when(userRepository.save(user)).thenReturn(user);
 
     assertSame(user, userService.createUser(user));
@@ -132,6 +134,7 @@ class UserServiceTest {
     when(userRepository.existsByUsername("alice")).thenReturn(false);
     when(passwordEncoder.encode("plain")).thenReturn("encoded");
     when(authorityRepository.findByAuthorityName("ROLE_USER")).thenReturn(Optional.of(role));
+    when(mfaService.generateSecret()).thenReturn("test-secret-456");
     when(userRepository.save(user)).thenReturn(user);
 
     doThrow(new RuntimeException("SMTP server unavailable"))

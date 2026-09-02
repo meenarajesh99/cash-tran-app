@@ -32,23 +32,14 @@ export default function LoginPage() {
   const { login, verifyMfa } = useContext(AuthContext);
 
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(false);
-
   const [mfaRequired, setMfaRequired] = useState(false);
-
   const [mfaToken, setMfaToken] = useState(null);
-
   const [mfaCode, setMfaCode] = useState("");
-
   const [mfaError, setMfaError] = useState(null);
-
   const [rememberMe, setRememberMe] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
-
   const [darkMode] = useState(false);
-
   const [error, setError] = useState(null);
 
   const {
@@ -165,7 +156,7 @@ export default function LoginPage() {
         }}
       >
         {/* Logo */}
-        <Box textAlign="center" mb={4}>
+        <Box sx={{ textAlign: "center", mb: 4 }}>
           <AccountBalanceWalletIcon
             sx={{
               fontSize: 70,
@@ -188,7 +179,7 @@ export default function LoginPage() {
 
         {mfaRequired ? (
           <>
-            <Box textAlign="center" mb={3}>
+            <Box sx={{ textAlign: "center", mb: 3 }}>
               <SecurityIcon
                 sx={{
                   fontSize: 55,
@@ -352,12 +343,7 @@ export default function LoginPage() {
                 )}
               />
 
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mt={1}
-              >
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1 }}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -416,16 +402,11 @@ export default function LoginPage() {
           </>
         )}
 
-        <Typography
-          mt={4}
-          textAlign="center"
-          color="text.secondary"
-          fontSize={13}
-        >
+        <Typography mt={4} align="center" color="text.secondary" fontSize={13}>
           Fast • Secure • Trusted Payments
         </Typography>
 
-        <Typography textAlign="center" color="text.secondary" fontSize={12}>
+        <Typography align="center" color="text.secondary" fontSize={12}>
           © {new Date().getFullYear()} CashTran. All Rights Reserved.
         </Typography>
       </Paper>

@@ -17,6 +17,10 @@ export const verifyMfaLogin = async (mfaToken, code) => {
   });
 };
 
+export const verifyMfaSetup = async (enrollmentToken, code) => {
+  return axiosClient.post("/api/auth/mfa/enroll", { enrollmentToken, code });
+};
+
 export const authRegister = (username, password, email) =>
   api.post("/api/auth/register", { username, password, email });
 

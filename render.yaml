@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: cashtran-backend
+    env: docker
+    dockerfilePath: ./cashtran-server/Dockerfile
+    autoDeploy: true
+    branch: main
+
+    # Render uses environment group or individual vars
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SERVER_PORT
+        value: 8080
+      - key: DB_PORT
+        value: 5432
+      - key: JWT_EXPIRATION
+        value: 86400
+      - key: JWT_REMEMBER_ME_EXPIRATION
+        value: 604800
+      # OpenTelemetry
+      - key: OTEL_SERVICE_NAME
+        value: cashtran-backend
+      - key: OTEL_TRACES_EXPORTER
+        value: otlp
+      - key: OTEL_METRICS_EXPORTER
+        value: otlp
+      - key: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: http/protobuf
+      - key: OTEL_RESOURCE_ATTRIBUTES
+        value: deployment.environment=production,service.version=1.0
+      # These must be set in Render dashboard:
+      # - DATABASE_URL (from Neon)
+      # - JWT_BASE64_SECRET (generate a new one)
+      # - DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD (parsed from DATABASE_URL)
+
+  - type: web
+    name: cashtran-frontend
+    env: docker
+    dockerfilePath: ./cashtran-frontend/Dockerfile
+    autoDeploy: true
+    branch: main
+
+    envVars:
+      - key: VITE_API_URL
+        value: https://cashtran-backend.onrender.com
+        # This will be replaced with your actual Render backend URL
+
+    # Routes and custom domain (optional)
+    routes:
+      - path: /
+        destination: cashtran-frontend
+

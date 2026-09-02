@@ -26,6 +26,7 @@ public class UserService {
   private final AuthorityRepository authorityRepository;
   private final AccountRepository accountRepository;
   private final PasswordEncoder passwordEncoder;
+    private final MfaService mfaService;
 
   private static final BigDecimal INITIAL_ACCOUNT_BALANCE = new BigDecimal("500.00");
 
@@ -34,15 +35,18 @@ public class UserService {
       UserRepository userRepository,
       AuthorityRepository authorityRepository,
       AccountRepository accountRepository,
-      PasswordEncoder passwordEncoder) {
+      PasswordEncoder passwordEncoder,
+      MfaService mfaService) {
 
     this.emailService = emailService;
     this.userRepository = userRepository;
     this.authorityRepository = authorityRepository;
     this.accountRepository = accountRepository;
     this.passwordEncoder = passwordEncoder;
+    this.mfaService = mfaService;
   }
 
+  @Transactional
   public User createUser(User user) {
     if (userRepository.existsByEmail(user.getEmail())) {
       throw new EmailAlreadyRegisteredException();
@@ -52,7 +56,6 @@ public class UserService {
       throw new UsernameAlreadyTakenException();
     }
     user.setPassword(passwordEncoder.encode(user.getPassword()));
-
     user.setActivated(true);
 
     Authority userRole =
@@ -63,6 +66,14 @@ public class UserService {
     Set<Authority> authorities = new HashSet<>();
     authorities.add(userRole);
     user.setAuthorities(authorities);
+      /*
+       * Automatically create a unique MFA secret
+       * for every newly registered user.
+       */
+
+      String mfaSecret = mfaService.generateSecret();
+      user.setMfaSecret(mfaSecret);
+      user.setMfaEnabled(false);
 
     User savedUser = userRepository.save(user);
 

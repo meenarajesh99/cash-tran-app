@@ -153,7 +153,15 @@ export default function Dashboard() {
     t.transferStatusDesc?.toLowerCase().includes("approved"),
   ).length;
 
-  const pendingCount = pendingReceived.length + pendingSent.length;
+  // Count only transfers that are still pending (exclude rejected)
+  const pendingCount =
+    pendingReceived.filter((t) => t.transferStatusDesc?.toLowerCase().includes("pending")).length +
+    pendingSent.filter((t) => t.transferStatusDesc?.toLowerCase().includes("pending")).length;
+
+  // Count rejected requests separately so dashboard shows rejected status clearly
+  const rejectedCount =
+    pendingReceived.filter((t) => t.transferStatusDesc?.toLowerCase().includes("rejected")).length +
+    pendingSent.filter((t) => t.transferStatusDesc?.toLowerCase().includes("rejected")).length;
 
   const allTransfers = [
     ...transfers,
@@ -212,7 +220,7 @@ export default function Dashboard() {
           mb: 5,
         }}
       >
-        <Box display="flex" alignItems="center" mb={4}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
           <Avatar
             sx={{
               width: 60,
@@ -247,7 +255,7 @@ export default function Dashboard() {
         )}
 
         {loading ? (
-          <Box display="flex" justifyContent="center" mt={8}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
             <CircularProgress size={60} />
           </Box>
         ) : (
@@ -280,6 +288,14 @@ export default function Dashboard() {
 
               <Grid item xs={12} md={3}>
                 <StatCard
+                  title="Rejected"
+                  value={rejectedCount}
+                  icon={<RequestPage />}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={3}>
+                <StatCard
                   title="Transfers"
                   value={transfers.length}
                   icon={<TrendingUp />}
@@ -297,13 +313,7 @@ export default function Dashboard() {
                 Quick Actions
               </Typography>
 
-              <Stack
-                direction={{
-                  xs: "column",
-                  md: "row",
-                }}
-                spacing={2}
-              >
+              <Stack spacing={2} sx={{ flexDirection: { xs: "column", md: "row" } }}>
                 <ActionButton
                   text="My Account"
                   icon={<Person />}
@@ -341,11 +351,7 @@ export default function Dashboard() {
                 borderRadius: 4,
               }}
             >
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-              >
+               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Typography variant="h6" fontWeight="bold">
                   Recent Transfers
                 </Typography>
@@ -375,11 +381,7 @@ export default function Dashboard() {
                     }}
                   >
                     <CardContent>
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                      >
+                      <Stack sx={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                         <Box>
                           <Typography fontWeight="bold">
                             Transfer #{transfer.transferId}
@@ -407,9 +409,11 @@ export default function Dashboard() {
                         </Box>
 
                         <Box>
-                          {pendingReceived.some(
-                            (item) => item.transferId === transfer.transferId,
-                          ) && (
+                           {pendingReceived.some(
+                             (item) =>
+                               item.transferId === transfer.transferId &&
+                               item.transferStatusDesc?.toLowerCase().includes("pending"),
+                           ) && (
                             <Box sx={{ mb: 1 }}>
                               <Button
                                 size="small"
@@ -465,11 +469,7 @@ function StatCard({ title, value, icon }) {
       }}
     >
       <CardContent>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
+         <Stack sx={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Box>
             <Typography color="text.secondary">{title}</Typography>
 

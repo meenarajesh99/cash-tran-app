@@ -18,6 +18,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
 @RestController
@@ -52,7 +54,6 @@ public class AuthenticationController {
   public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
 
     LoginResultDTO result = authService.login(loginDTO);
-
     User user =
         userRepository
             .findByUsername(loginDTO.getUsername())
@@ -65,7 +66,6 @@ public class AuthenticationController {
      * or JWT yet.
      */
     if (result.isMfaRequired()) {
-
       return ResponseEntity.ok(new LoginResponseDTO(null, null, true, result.getToken()));
     }
 
@@ -73,21 +73,33 @@ public class AuthenticationController {
      * Normal login.
      */
     UserResponseDTO userResponse = UserResponseDTO.from(user);
-
     return ResponseEntity.ok(new LoginResponseDTO(result.getToken(), userResponse, false, null));
   }
 
   @Operation(summary = "Register a new user")
   @PostMapping("/register")
   @ResponseStatus(HttpStatus.CREATED)
-  public UserResponseDTO register(@Valid @RequestBody RegisterUserDTO newUser) {
+  public RegistrationResponseDTO register(@Valid @RequestBody RegisterUserDTO newUser) {
 
     User user = new User();
     user.setUsername(newUser.getUsername());
     user.setPassword(newUser.getPassword());
     user.setEmail(newUser.getEmail());
     User savedUser = userService.createUser(user);
-    return UserResponseDTO.from(savedUser);
+    String username = URLEncoder.encode(savedUser.getUsername(), StandardCharsets.UTF_8);
+
+    String mfaSetupUrl = mfaService.generateOtpAuthUrl(username, savedUser.getMfaSecret());
+    String enrollmentToken = tokenProvider.createMfaEnrollmentToken(savedUser.getUsername());
+
+    return new RegistrationResponseDTO(
+        savedUser.getUserId(),
+        savedUser.getAccount().getAccountId(),
+        savedUser.getUsername(),
+        savedUser.getEmail(),
+        savedUser.isActivated(),
+        true,
+        mfaSetupUrl,
+        enrollmentToken);
   }
 
   @PostMapping("/forgot-password")
@@ -103,6 +115,55 @@ public class AuthenticationController {
   public void resetPassword(@Valid @RequestBody ResetPasswordRequestDTO request) {
 
     passwordResetService.resetPassword(request.getToken(), request.getPassword());
+  }
+
+  @PostMapping("/mfa/enroll")
+  public ResponseEntity<?> completeMfaEnrollment(@Valid @RequestBody MfaEnrollmentRequest request) {
+
+    /*
+     * 1. Validate the temporary enrollment token.
+     */
+    if (!tokenProvider.validateMfaEnrollment(request.getEnrollmentToken())) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body("Invalid or expired MFA enrollment token");
+    }
+
+    /*
+     * 2. Extract username from the enrollment token.
+     *
+     * Do NOT trust a username supplied by the frontend.
+     */
+    String username = tokenProvider.getUsernameFromMfaEnrollment(request.getEnrollmentToken());
+
+    /*
+     * 3. Find the user.
+     */
+    User user =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    /*
+     * 4. Prevent enrollment from being completed twice.
+     */
+    if (user.isMfaEnabled()) {
+      return ResponseEntity.badRequest().body("MFA is already enabled");
+    }
+
+    /*
+     * 5. Verify the first Google Authenticator code.
+     */
+    boolean valid = mfaService.verifyCode(user.getMfaSecret(), request.getCode());
+    if (!valid) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid MFA code");
+    }
+
+    /*
+     * 6. MFA setup succeeded.
+     */
+    user.setMfaEnabled(true);
+    userRepository.save(user);
+    return ResponseEntity.ok(java.util.Map.of("message", "MFA enabled successfully"));
   }
 
   @PostMapping("/mfa/login")

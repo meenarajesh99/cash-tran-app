@@ -12,37 +12,37 @@ import org.springframework.stereotype.Service;
 @Service
 public class MfaService {
 
-    private final SecretGenerator secretGenerator =
-            new DefaultSecretGenerator();
+  private final SecretGenerator secretGenerator = new DefaultSecretGenerator();
 
-    public String generateSecret() {
-        return secretGenerator.generate();
+  public String generateSecret() {
+    return secretGenerator.generate();
+  }
+
+  public boolean verifyCode(String secret, String code) {
+
+    if (secret == null || code == null) {
+      return false;
     }
 
-    public boolean verifyCode(String secret, String code) {
+    System.out.println("MFA secret exists: " + !secret.isBlank());
+    System.out.println("MFA code received: " + code);
 
-        if (secret == null || code == null) {
-            return false;
-        }
+    CodeVerifier verifier =
+        new DefaultCodeVerifier(
+            new DefaultCodeGenerator(HashingAlgorithm.SHA1), new SystemTimeProvider());
 
-        CodeVerifier verifier =
-                new DefaultCodeVerifier(
-                        new DefaultCodeGenerator(HashingAlgorithm.SHA1),
-                        new SystemTimeProvider());
+    ((DefaultCodeVerifier) verifier).setTimePeriod(30);
+    ((DefaultCodeVerifier) verifier).setAllowedTimePeriodDiscrepancy(1);
 
-        ((DefaultCodeVerifier) verifier).setTimePeriod(30);
-        ((DefaultCodeVerifier) verifier).setAllowedTimePeriodDiscrepancy(1);
+    boolean valid = verifier.isValidCode(secret, code);
 
-        return verifier.isValidCode(secret, code);
-    }
+    System.out.println("MFA code valid: " + valid);
 
-    public String generateOtpAuthUrl(
-            String username,
-            String secret) {
+    return valid;
+  }
 
-        return String.format(
-                "otpauth://totp/CashTran:%s?secret=%s&issuer=CashTran",
-                username,
-                secret);
-    }
+  public String generateOtpAuthUrl(String username, String secret) {
+
+    return String.format("otpauth://totp/CashTran:%s?secret=%s&issuer=CashTran", username, secret);
+  }
 }

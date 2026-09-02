@@ -33,3 +33,17 @@ service:
         - batch
       exporters:
         - otlphttp/grafana_cloud
+    metrics:
+      receivers:
+        - otlp
+      processors:
+        - batch
+      exporters:
+        - otlphttp/grafana_cloud
+    logs:
+      receivers:
+        - otlp
+      processors:
+        - batch
+      exporters:
+        - otlphttp/grafana_cloud

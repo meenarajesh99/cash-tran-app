@@ -17,7 +17,6 @@ import { AuthContext } from "./auth/AuthProvider";
 import "./App.css";
 import RequestMoney from "./pages/RequestMoney.jsx";
 import MfaLogin from "./pages/MfaLogin.jsx";
-import MfaSetup from "./pages/MfaSetup.jsx";
 import MfaPage from "./pages/MfaPage";
 
 function ProtectedRoute({ children }) {
@@ -83,7 +82,6 @@ function App() {
         />
         <Route path="/mfa" element={<MfaLogin />} />
 
-        <Route path="/mfa/setup" element={<MfaSetup />} />
         <Route path="/mfa" element={<MfaPage />} />
 
         {/* Protected Routes */}

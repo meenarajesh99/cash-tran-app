@@ -43,7 +43,10 @@ public class GlobalExceptionHandler {
       ResponseStatusException ex, HttpServletRequest request) {
 
     int statusVal = ex.getStatusCode().value();
-    String reason = HttpStatus.resolve(statusVal) != null ? HttpStatus.resolve(statusVal).getReasonPhrase() : ex.getStatusCode().toString();
+    String reason =
+        HttpStatus.resolve(statusVal) != null
+            ? HttpStatus.resolve(statusVal).getReasonPhrase()
+            : ex.getStatusCode().toString();
 
     ErrorResponse body =
         new ErrorResponse(
@@ -110,7 +113,9 @@ public class GlobalExceptionHandler {
       DataIntegrityViolationException ex, HttpServletRequest request) {
 
     String message =
-        ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
+        ex.getMostSpecificCause() != null
+            ? ex.getMostSpecificCause().getMessage()
+            : ex.getMessage();
 
     ErrorResponse body =
         new ErrorResponse(
@@ -126,8 +131,9 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleAll(Exception ex, HttpServletRequest request) {
-    // Log the full stack trace for unexpected errors
-    log.error("Unhandled exception for request {} {}", request.getMethod(), request.getRequestURI(), ex);
+
+    log.error(
+        "Unhandled exception for request {} {}", request.getMethod(), request.getRequestURI(), ex);
 
     ErrorResponse body =
         new ErrorResponse(

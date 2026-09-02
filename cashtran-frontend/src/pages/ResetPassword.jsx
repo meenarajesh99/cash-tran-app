@@ -106,16 +106,11 @@ export default function ResetPassword() {
           borderRadius: 5,
         }}
       >
-        <Typography
-          variant="h4"
-          fontWeight="bold"
-          textAlign="center"
-          gutterBottom
-        >
+        <Typography variant="h4" fontWeight="bold" align="center" gutterBottom>
           Reset Password
         </Typography>
 
-        <Typography color="text.secondary" textAlign="center" sx={{ mb: 3 }}>
+        <Typography color="text.secondary" align="center" sx={{ mb: 3 }}>
           Enter your new password below.
         </Typography>
 

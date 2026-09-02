@@ -158,7 +158,7 @@ export default function SendTransfer() {
             borderRadius: 5,
           }}
         >
-          <Box textAlign="center" mb={4}>
+          <Box sx={{ textAlign: "center", mb: 4 }}>
             <AccountBalanceWallet
               sx={{
                 fontSize: 65,
@@ -196,14 +196,14 @@ export default function SendTransfer() {
               onChange={(e) => setToUser(e.target.value)}
               margin="normal"
             >
-              {users.map((user) => (
-                <MenuItem key={user.id} value={String(user.id)}>
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Avatar>{user.username?.charAt(0)?.toUpperCase()}</Avatar>
-                    {user.username}
-                  </Box>
-                </MenuItem>
-              ))}
+                {users.map((user) => (
+                  <MenuItem key={user.id} value={String(user.id)}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Avatar>{user.username?.charAt(0)?.toUpperCase()}</Avatar>
+                      {user.username}
+                    </Box>
+                  </MenuItem>
+                ))}
             </TextField>
 
             <TextField
@@ -237,7 +237,7 @@ export default function SendTransfer() {
               >
                 <Typography>Sending money to:</Typography>
                 <Divider sx={{ my: 1 }} />
-                <Box display="flex" alignItems="center" gap={2}>
+                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <Avatar>
                     {selectedUser.username?.charAt(0)?.toUpperCase()}
                   </Avatar>

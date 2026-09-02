@@ -82,7 +82,7 @@ export default function MfaPage() {
           borderRadius: 5,
         }}
       >
-        <Box textAlign="center" mb={4}>
+        <Box sx={{ textAlign: "center", mb: 4 }}>
           <AccountBalanceWalletIcon
             sx={{
               fontSize: 70,
@@ -105,11 +105,11 @@ export default function MfaPage() {
           </Alert>
         )}
 
-        <Typography textAlign="center" sx={{ mb: 3 }}>
+        <Typography align="center" sx={{ mb: 3 }}>
           Enter the 6-digit verification code from Google Authenticator.
         </Typography>
 
-        <Typography textAlign="center" fontWeight="bold" sx={{ mb: 3 }}>
+        <Typography align="center" fontWeight="bold" sx={{ mb: 3 }}>
           {username}
         </Typography>
 
