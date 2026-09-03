@@ -1,6 +1,5 @@
 package com.perscholas.cashtran.service;
 
-import com.perscholas.cashtran.security.jwt.JwtAuthenticationFilter;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -8,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -16,7 +16,7 @@ import java.math.RoundingMode;
 @Service
 public class EmailService {
 
-  private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+  private static final Logger log = LoggerFactory.getLogger(EmailService.class);
   private final JavaMailSender mailSender;
   private final String fromEmail;
 
@@ -26,34 +26,42 @@ public class EmailService {
     this.fromEmail = fromEmail;
   }
 
-  public void sendEmail(String to, String username) throws MessagingException {
-    MimeMessage message = mailSender.createMimeMessage();
-    MimeMessageHelper helper = new MimeMessageHelper(message, true);
-    helper.setFrom(fromEmail);
-    helper.setTo(to);
-    helper.setSubject("Welcome to CashTran");
+  @Async
+  public void sendEmail(String to, String username) {
+    try {
+      MimeMessage message = mailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-    String htmlContent =
-        """
-                <html>
-                    <body>
-                        <h2>Welcome to CashTran, %s!</h2>
-                        <p>Your account has been created successfully.</p>
-                        <p>You can now login and start transferring money securely.</p>
-                        <br>
-                        <p>
-                        Thanks,<br>
-                        CashTran Team
-                        </p>
-                    </body>
-                </html>
-                """
-            .formatted(username);
+      helper.setFrom(fromEmail);
+      helper.setTo(to);
+      helper.setSubject("Welcome to CashTran");
 
-    helper.setText(htmlContent, true);
-    log.info("Sending welcome email to {}", to);
-    mailSender.send(message);
-    log.info("Welcome email sent to {}", to);
+      String htmlContent =
+          """
+                    <html>
+                        <body>
+                            <h2>Welcome to CashTran, %s!</h2>
+                            <p>Your account has been created successfully.</p>
+                            <p>You can now login and start transferring money securely.</p>
+                            <br>
+                            <p>
+                            Thanks,<br>
+                            CashTran Team
+                            </p>
+                        </body>
+                    </html>
+                    """
+              .formatted(username);
+
+      helper.setText(htmlContent, true);
+
+      log.info("Sending welcome email to {}", to);
+      mailSender.send(message);
+      log.info("Welcome email sent to {}", to);
+
+    } catch (Exception e) {
+      log.error("Unable to send welcome email to {}", to, e);
+    }
   }
 
   public void sendPasswordResetEmail(String to, String username, String resetLink)

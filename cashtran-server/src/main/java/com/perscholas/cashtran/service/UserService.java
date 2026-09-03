@@ -9,6 +9,8 @@ import com.perscholas.cashtran.repository.AccountRepository;
 import com.perscholas.cashtran.repository.AuthorityRepository;
 import com.perscholas.cashtran.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,12 +23,13 @@ import java.util.Set;
 @Service
 public class UserService {
 
+  private static final Logger log = LoggerFactory.getLogger(UserService.class);
   private final EmailService emailService;
   private final UserRepository userRepository;
   private final AuthorityRepository authorityRepository;
   private final AccountRepository accountRepository;
   private final PasswordEncoder passwordEncoder;
-    private final MfaService mfaService;
+  private final MfaService mfaService;
 
   private static final BigDecimal INITIAL_ACCOUNT_BALANCE = new BigDecimal("500.00");
 
@@ -66,14 +69,14 @@ public class UserService {
     Set<Authority> authorities = new HashSet<>();
     authorities.add(userRole);
     user.setAuthorities(authorities);
-      /*
-       * Automatically create a unique MFA secret
-       * for every newly registered user.
-       */
+    /*
+     * Automatically create a unique MFA secret
+     * for every newly registered user.
+     */
 
-      String mfaSecret = mfaService.generateSecret();
-      user.setMfaSecret(mfaSecret);
-      user.setMfaEnabled(false);
+    String mfaSecret = mfaService.generateSecret();
+    user.setMfaSecret(mfaSecret);
+    user.setMfaEnabled(false);
 
     User savedUser = userRepository.save(user);
 
@@ -85,13 +88,12 @@ public class UserService {
     accountRepository.save(account);
 
     try {
-      System.out.println("Preparing to send email to: " + savedUser.getEmail());
+      log.info("Preparing to send email to: " + savedUser.getEmail());
       emailService.sendEmail(savedUser.getEmail(), savedUser.getUsername());
-      System.out.println("Welcome email sent successfully to: " + savedUser.getEmail());
+      log.info("Welcome email sent successfully to: " + savedUser.getEmail());
 
     } catch (Exception e) {
-      System.err.println(
-          "Unable to send welcome email: " + savedUser.getEmail() + ": " + e.getMessage());
+      log.error("Unable to send welcome email: " + savedUser.getEmail() + ": " + e.getMessage());
     }
 
     return savedUser;
