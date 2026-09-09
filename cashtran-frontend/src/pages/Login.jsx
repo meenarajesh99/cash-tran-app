@@ -55,16 +55,22 @@ export default function LoginPage() {
   });
 
   async function onSubmit(data) {
+    console.log("LOGIN FORM SUBMITTED");
     setLoading(true);
     setError(null);
 
     try {
+      console.log("CALLING LOGIN API");
       const response = await login(data.username, data.password);
+      console.log("LOGIN RESPONSE:", response);
+      console.log("MFA REQUIRED:", response?.mfaRequired);
+      console.log("MFA TOKEN:", response?.mfaToken);
 
       /*
        * MFA is enabled for this user.
        */
       if (response.mfaRequired) {
+        console.log("SHOWING MFA SCREEN");
         setMfaToken(response.mfaToken);
         setMfaRequired(true);
         return;
@@ -73,6 +79,7 @@ export default function LoginPage() {
       /*
        * Normal login.
        */
+      console.log("NORMAL LOGIN");
       if (rememberMe) {
         localStorage.setItem("rememberedUser", data.username);
       } else {
@@ -81,6 +88,7 @@ export default function LoginPage() {
 
       navigate("/dashboard");
     } catch (err) {
+      console.error("Login error:", err);
       setError(err?.response?.data || err.message || "Login failed");
     } finally {
       setLoading(false);
@@ -343,7 +351,14 @@ export default function LoginPage() {
                 )}
               />
 
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mt: 1,
+                }}
+              >
                 <FormControlLabel
                   control={
                     <Checkbox

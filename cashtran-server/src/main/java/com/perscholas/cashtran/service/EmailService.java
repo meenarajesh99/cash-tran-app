@@ -55,9 +55,9 @@ public class EmailService {
 
       helper.setText(htmlContent, true);
 
-      log.info("Sending welcome email to {}", to);
+      log.info("Sending welcome email to {} on thread {}", to, Thread.currentThread().getName());
       mailSender.send(message);
-      log.info("Welcome email sent to {}", to);
+      log.info("Welcome email sent to {} on thread {}", to, Thread.currentThread().getName());
 
     } catch (Exception e) {
       log.error("Unable to send welcome email to {}", to, e);
@@ -117,6 +117,7 @@ public class EmailService {
     mailSender.send(message);
   }
 
+  @Async
   public void sendTransferNotification(
       String to,
       String username,

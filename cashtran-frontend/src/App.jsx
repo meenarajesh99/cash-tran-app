@@ -146,31 +146,11 @@ function App() {
 
         {/* Default Route */}
 
-        <Route
-          path="/"
-
-          element={
-            <Navigate
-              to="/dashboard"
-
-              replace
-            />
-          }
-        />
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* Catch Unknown URLs */}
 
-        <Route
-          path="*"
-
-          element={
-            <Navigate
-              to="/dashboard"
-
-              replace
-            />
-          }
-        />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

@@ -89,8 +89,15 @@ public class UserService {
 
     try {
       log.info("Preparing to send email to: " + savedUser.getEmail());
+      log.info(
+          "Submitting welcome email for {} on thread {}",
+          savedUser.getEmail(),
+          Thread.currentThread().getName());
       emailService.sendEmail(savedUser.getEmail(), savedUser.getUsername());
-      log.info("Welcome email sent successfully to: " + savedUser.getEmail());
+      log.info(
+          "Welcome email task submitted for {} on thread {}",
+          savedUser.getEmail(),
+          Thread.currentThread().getName());
 
     } catch (Exception e) {
       log.error("Unable to send welcome email: " + savedUser.getEmail() + ": " + e.getMessage());
