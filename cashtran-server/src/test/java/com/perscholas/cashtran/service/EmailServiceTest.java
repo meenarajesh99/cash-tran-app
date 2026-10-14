@@ -12,15 +12,16 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Properties;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class EmailServiceTest {
@@ -62,6 +63,20 @@ class EmailServiceTest {
     verify(mailSender).send(message);
   }
 
+  @Test
+  void sendEmailHandlesMailSendException() {
+
+    MimeMessage message = realMimeMessage();
+
+    when(mailSender.createMimeMessage()).thenReturn(message);
+
+    whenSendThrowsMailSendException(message);
+
+    assertDoesNotThrow(() -> emailService.sendEmail("alice@example.com", "alice"));
+
+    verify(mailSender).send(message);
+  }
+
   // -------------------------------------------------------------------------
   // Password Reset Email
   // -------------------------------------------------------------------------
@@ -87,6 +102,31 @@ class EmailServiceTest {
         () -> assertTrue(body.contains(resetLink)),
         () -> assertTrue(body.contains("30 minutes")),
         () -> assertTrue(body.contains("CashTran Team")));
+
+    verify(mailSender).send(message);
+  }
+
+  @Test
+  void sendPasswordResetEmailPropagatesMailSendException() {
+
+    MimeMessage message = realMimeMessage();
+
+    when(mailSender.createMimeMessage()).thenReturn(message);
+
+    MailSendException mailSendException = new MailSendException("SMTP server unavailable");
+
+    doThrow(mailSendException).when(mailSender).send(message);
+
+    MailSendException thrown =
+        assertThrows(
+            MailSendException.class,
+            () ->
+                emailService.sendPasswordResetEmail(
+                    "alice@example.com",
+                    "alice",
+                    "https://cashtran.example.com/reset-password?token=abc123"));
+
+    assertSame(mailSendException, thrown);
 
     verify(mailSender).send(message);
   }
@@ -124,7 +164,7 @@ class EmailServiceTest {
         () -> assertTrue(body.contains("Hello " + username)),
         () -> assertTrue(body.contains(expectedMessage)),
         () -> assertTrue(body.contains(otherUsername)),
-        () -> assertTrue(body.contains("$" + amount.setScale(2, BigDecimal.ROUND_HALF_UP))),
+        () -> assertTrue(body.contains("$" + amount.setScale(2, RoundingMode.HALF_UP))),
         () -> assertTrue(body.contains(transferType)),
         () -> assertTrue(body.contains(status)),
         () -> assertTrue(body.contains("CashTran Team")));
@@ -230,6 +270,23 @@ class EmailServiceTest {
     verify(mailSender).send(message);
   }
 
+  @Test
+  void sendTransferNotificationHandlesMailSendException() {
+
+    MimeMessage message = realMimeMessage();
+
+    when(mailSender.createMimeMessage()).thenReturn(message);
+
+    whenSendThrowsMailSendException(message);
+
+    assertDoesNotThrow(
+        () ->
+            emailService.sendTransferNotification(
+                "bob@example.com", "bob", "alice", new BigDecimal("25.00"), "Send", "Completed"));
+
+    verify(mailSender).send(message);
+  }
+
   // -------------------------------------------------------------------------
   // Test Helpers
   // -------------------------------------------------------------------------
@@ -239,6 +296,11 @@ class EmailServiceTest {
     Session session = Session.getInstance(new Properties());
 
     return new MimeMessage(session);
+  }
+
+  private void whenSendThrowsMailSendException(MimeMessage message) {
+
+    doThrow(new MailSendException("SMTP server unavailable")).when(mailSender).send(message);
   }
 
   private String getBody(MimeMessage message) throws Exception {
@@ -262,6 +324,7 @@ class EmailServiceTest {
     if (content instanceof Multipart multipart) {
 
       for (int i = 0; i < multipart.getCount(); i++) {
+
         extractText(multipart.getBodyPart(i), body);
       }
     }

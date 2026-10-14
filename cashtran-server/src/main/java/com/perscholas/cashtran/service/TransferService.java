@@ -5,7 +5,7 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.perscholas.cashtran.model.*;
 import com.perscholas.cashtran.repository.*;
-import jakarta.mail.MessagingException;
+import org.springframework.mail.MailSendException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +59,8 @@ public class TransferService {
     // the lifecycle of a request (for example, a rejected request should still
     // be visible in dashboards with status "Rejected").
     List<Transfer> pending = transferRepository.findPendingReceivedTransfers("Pending", accountId);
-    List<Transfer> rejected = transferRepository.findPendingReceivedTransfers("Rejected", accountId);
+    List<Transfer> rejected =
+        transferRepository.findPendingReceivedTransfers("Rejected", accountId);
     pending.addAll(rejected);
     // Optionally sort by createdAt descending so newest items appear first
     pending.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
@@ -88,24 +89,31 @@ public class TransferService {
 
     if (amount.compareTo(BigDecimal.ZERO) <= 0) {
       throw new org.springframework.web.server.ResponseStatusException(
-          org.springframework.http.HttpStatus.BAD_REQUEST, "Transfer amount must be greater than zero.");
+          org.springframework.http.HttpStatus.BAD_REQUEST,
+          "Transfer amount must be greater than zero.");
     }
 
     Account fromAccount =
         accountRepository
             .findById(fromAccountId)
-            .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_FOUND, "Source account not found"));
+            .orElseThrow(
+                () ->
+                    new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Source account not found"));
 
     Account toAccount =
         accountRepository
             .findById(toAccountId)
-            .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_FOUND, "Destination account not found"));
+            .orElseThrow(
+                () ->
+                    new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND,
+                        "Destination account not found"));
 
     if (fromAccount.getAccountId().equals(toAccount.getAccountId())) {
       throw new org.springframework.web.server.ResponseStatusException(
-          org.springframework.http.HttpStatus.BAD_REQUEST, "Cannot transfer money to the same account.");
+          org.springframework.http.HttpStatus.BAD_REQUEST,
+          "Cannot transfer money to the same account.");
     }
 
     if (fromAccount.getBalance().compareTo(amount) < 0) {
@@ -126,7 +134,8 @@ public class TransferService {
             .orElseThrow(
                 () ->
                     new org.springframework.web.server.ResponseStatusException(
-                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR, "Completed status not found"));
+                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Completed status not found"));
 
     TransferType sendType =
         transferTypeRepository
@@ -134,7 +143,8 @@ public class TransferService {
             .orElseThrow(
                 () ->
                     new org.springframework.web.server.ResponseStatusException(
-                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR, "Transfer type not found"));
+                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Transfer type not found"));
 
     Transfer transfer = new Transfer();
 
@@ -174,24 +184,31 @@ public class TransferService {
 
     if (amount.compareTo(BigDecimal.ZERO) <= 0) {
       throw new org.springframework.web.server.ResponseStatusException(
-          org.springframework.http.HttpStatus.BAD_REQUEST, "Request amount must be greater than zero.");
+          org.springframework.http.HttpStatus.BAD_REQUEST,
+          "Request amount must be greater than zero.");
     }
 
     Account fromAccount =
         accountRepository
             .findById(fromAccountId)
-            .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_FOUND, "Source account not found"));
+            .orElseThrow(
+                () ->
+                    new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Source account not found"));
 
     Account toAccount =
         accountRepository
             .findById(toAccountId)
-            .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_FOUND, "Destination account not found"));
+            .orElseThrow(
+                () ->
+                    new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND,
+                        "Destination account not found"));
 
     if (fromAccount.getAccountId().equals(toAccount.getAccountId())) {
       throw new org.springframework.web.server.ResponseStatusException(
-          org.springframework.http.HttpStatus.BAD_REQUEST, "Cannot request money from the same account.");
+          org.springframework.http.HttpStatus.BAD_REQUEST,
+          "Cannot request money from the same account.");
     }
 
     TransferStatus pendingStatus =
@@ -200,7 +217,8 @@ public class TransferService {
             .orElseThrow(
                 () ->
                     new org.springframework.web.server.ResponseStatusException(
-                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR, "Pending status not found"));
+                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Pending status not found"));
 
     TransferType requestType =
         transferTypeRepository
@@ -208,7 +226,8 @@ public class TransferService {
             .orElseThrow(
                 () ->
                     new org.springframework.web.server.ResponseStatusException(
-                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR, "Request transfer type not found"));
+                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Request transfer type not found"));
 
     Transfer transfer = new Transfer();
 
@@ -242,12 +261,15 @@ public class TransferService {
     Transfer transfer =
         transferRepository
             .findById(transferId)
-            .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_FOUND, "Transfer not found"));
+            .orElseThrow(
+                () ->
+                    new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Transfer not found"));
 
     if (!transfer.getAccountTo().getAccountId().equals(accountId)) {
       throw new org.springframework.web.server.ResponseStatusException(
-          org.springframework.http.HttpStatus.FORBIDDEN, "Only the requested user can approve this transfer");
+          org.springframework.http.HttpStatus.FORBIDDEN,
+          "Only the requested user can approve this transfer");
     }
 
     if ("Approved".equalsIgnoreCase(transfer.getTransferStatus().getTransferStatusDesc())) {
@@ -278,7 +300,8 @@ public class TransferService {
             .orElseThrow(
                 () ->
                     new org.springframework.web.server.ResponseStatusException(
-                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR, "Approved status not found"));
+                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Approved status not found"));
 
     transfer.setTransferStatus(approvedStatus);
 
@@ -306,12 +329,15 @@ public class TransferService {
     Transfer transfer =
         transferRepository
             .findById(transferId)
-            .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_FOUND, "Transfer not found"));
+            .orElseThrow(
+                () ->
+                    new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Transfer not found"));
 
     if (!transfer.getAccountTo().getAccountId().equals(accountId)) {
       throw new org.springframework.web.server.ResponseStatusException(
-          org.springframework.http.HttpStatus.FORBIDDEN, "Only the requested user can reject this transfer");
+          org.springframework.http.HttpStatus.FORBIDDEN,
+          "Only the requested user can reject this transfer");
     }
 
     TransferStatus rejectedStatus =
@@ -320,7 +346,8 @@ public class TransferService {
             .orElseThrow(
                 () ->
                     new org.springframework.web.server.ResponseStatusException(
-                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR, "Rejected status not found"));
+                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Rejected status not found"));
 
     transfer.setTransferStatus(rejectedStatus);
 
@@ -356,16 +383,12 @@ public class TransferService {
       BigDecimal amount,
       String transferType,
       String status) {
-
     try {
-
       emailService.sendTransferNotification(
           to, username, otherUsername, amount, transferType, status);
-
-    } catch (MessagingException e) {
-
+    } catch (MailSendException e) {
       System.err.println(
-          "Failed to send CashTran transfer notification to " + to + ": " + e.getMessage());
+          "Failed to send Cashtran transfer notification to " + to + ": " + e.getMessage());
     }
   }
 
@@ -374,8 +397,9 @@ public class TransferService {
     return transferRepository
         .findById(transferId)
         .orElseThrow(
-            () -> new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_FOUND, "Transfer not found"));
+            () ->
+                new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.NOT_FOUND, "Transfer not found"));
   }
 
   @Transactional(readOnly = true)
@@ -487,7 +511,9 @@ public class TransferService {
     } catch (Exception ex) {
 
       throw new org.springframework.web.server.ResponseStatusException(
-          org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR, "Unable to generate PDF statement", ex);
+          org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+          "Unable to generate PDF statement",
+          ex);
     }
   }
 }

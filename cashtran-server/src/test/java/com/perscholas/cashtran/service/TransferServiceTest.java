@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.MailSendException;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -295,7 +296,7 @@ class TransferServiceTest {
 
     when(transferRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-    doThrow(new MessagingException("SMTP unavailable"))
+    doThrow(new MailSendException("SMTP unavailable"))
         .when(emailService)
         .sendTransferNotification(
             anyString(), anyString(), anyString(), any(BigDecimal.class), anyString(), anyString());

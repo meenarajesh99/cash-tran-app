@@ -13,6 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.MailSendException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
@@ -137,7 +138,7 @@ class UserServiceTest {
     when(mfaService.generateSecret()).thenReturn("test-secret-456");
     when(userRepository.save(user)).thenReturn(user);
 
-    doThrow(new RuntimeException("SMTP server unavailable"))
+    doThrow(new MailSendException("SMTP server unavailable"))
         .when(emailService)
         .sendEmail("alice@example.com", "alice");
 

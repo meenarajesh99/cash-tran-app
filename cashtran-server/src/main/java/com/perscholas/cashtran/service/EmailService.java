@@ -5,11 +5,11 @@ import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -26,97 +26,47 @@ public class EmailService {
     this.fromEmail = fromEmail;
   }
 
+  /**
+   * * Sends the welcome email asynchronously. * * Email delivery failure should not prevent user
+   * registration * from completing successfully.
+   */
   @Async
   public void sendEmail(String to, String username) {
     try {
-      MimeMessage message = mailSender.createMimeMessage();
-      MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-      helper.setFrom(fromEmail);
-      helper.setTo(to);
-      helper.setSubject("Welcome to CashTran");
-
-      String htmlContent =
-          """
-                    <html>
-                        <body>
-                            <h2>Welcome to CashTran, %s!</h2>
-                            <p>Your account has been created successfully.</p>
-                            <p>You can now login and start transferring money securely.</p>
-                            <br>
-                            <p>
-                            Thanks,<br>
-                            CashTran Team
-                            </p>
-                        </body>
-                    </html>
-                    """
-              .formatted(username);
-
-      helper.setText(htmlContent, true);
-
+      MimeMessage message = createWelcomeEmail(to, username);
       log.info("Sending welcome email to {} on thread {}", to, Thread.currentThread().getName());
       mailSender.send(message);
-      log.info("Welcome email sent to {} on thread {}", to, Thread.currentThread().getName());
-
+      log.info("Welcome email sent successfully to {}", to);
+    } catch (MailSendException e) {
+      logMailSendFailure("welcome email", to, e);
+    } catch (MessagingException e) {
+      log.error("Unable to create welcome email for {}: {}", to, e.getMessage(), e);
     } catch (Exception e) {
-      log.error("Unable to send welcome email to {}", to, e);
+      log.error("Unexpected error while sending welcome email to {}", to, e);
     }
   }
 
+  /**
+   * * Sends the password reset email synchronously. * * MailSendException is intentionally allowed
+   * to propagate so the * calling service can decide how to handle the failure.
+   */
   public void sendPasswordResetEmail(String to, String username, String resetLink)
-      throws MessagingException {
-
-    MimeMessage message = mailSender.createMimeMessage();
-    MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-    helper.setFrom(fromEmail);
-    helper.setTo(to);
-    helper.setSubject("CashTran Password Reset");
-
-    String htmlContent =
-        """
-                <html>
-                    <body>
-                        <h2>Password Reset Request</h2>
-
-                        <p>Hello %s,</p>
-
-                        <p>
-                            We received a request to reset your CashTran password.
-                        </p>
-
-                        <p>
-                            <a href="%s">
-                                Reset Your Password
-                            </a>
-                        </p>
-
-                        <p>
-                            This link will expire in 30 minutes.
-                        </p>
-
-                        <p>
-                            If you did not request a password reset,
-                            you can safely ignore this email.
-                        </p>
-
-                        <br>
-
-                        <p>
-                            Thanks,<br>
-                            CashTran Team
-                        </p>
-                    </body>
-                </html>
-                """
-            .formatted(username, resetLink);
-
-    helper.setText(htmlContent, true);
-
-    mailSender.send(message);
+      throws MessagingException, MailSendException {
+    MimeMessage message = createPasswordResetEmail(to, username, resetLink);
+    log.info("Sending password reset email to {}", to);
+    try {
+      mailSender.send(message);
+      log.info("Password reset email sent successfully to {}", to);
+    } catch (MailSendException e) {
+      logMailSendFailure("password reset email", to, e);
+      throw e;
+    }
   }
 
+  /**
+   * * Sends a transfer notification asynchronously. * * Email failure should not cause the money
+   * transfer/request * operation itself to fail.
+   */
   @Async
   public void sendTransferNotification(
       String to,
@@ -124,17 +74,107 @@ public class EmailService {
       String otherUsername,
       BigDecimal amount,
       String transferType,
-      String status)
-      throws MessagingException {
+      String status) {
+    try {
+      MimeMessage message =
+          createTransferNotificationEmail(
+              to, username, otherUsername, amount, transferType, status);
+      log.info(
+          "Sending transfer notification to {} on thread {}", to, Thread.currentThread().getName());
+      mailSender.send(message);
+      log.info("Transfer notification sent successfully to {}", to);
+    } catch (MailSendException e) {
+      logMailSendFailure("transfer notification", to, e);
+    } catch (MessagingException e) {
+      log.error("Unable to create transfer notification for {}: {}", to, e.getMessage(), e);
+    } catch (Exception e) {
+      log.error("Unexpected error while sending transfer notification to {}", to, e);
+    }
+  }
 
+  private MimeMessage createWelcomeEmail(String to, String username) throws MessagingException {
     MimeMessage message = mailSender.createMimeMessage();
     MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
     helper.setFrom(fromEmail);
     helper.setTo(to);
+    helper.setSubject("Welcome to CashTran");
+    String htmlContent =
+        """
+                <html>
+                <body>
+                <h2>Welcome to CashTran, %s!</h2>
+                 <p>
+                 Your account has been created successfully.
+                  </p>
+                  <p>
+                  You can now login and start transferring money securely.
+                   </p>
+                   <br>
+                    <p>
+                     Thanks,<br> CashTran Team
+                      </p>
+                      </body>
+                      </html>
+                      """
+            .formatted(username);
+    helper.setText(htmlContent, true);
+    return message;
+  }
 
+  private MimeMessage createPasswordResetEmail(String to, String username, String resetLink)
+      throws MessagingException {
+    MimeMessage message = mailSender.createMimeMessage();
+    MimeMessageHelper helper = new MimeMessageHelper(message, true);
+    helper.setFrom(fromEmail);
+    helper.setTo(to);
+    helper.setSubject("CashTran Password Reset");
+    String htmlContent =
+        """
+                <html>
+                <body>
+                <h2>
+                Password Reset Request
+                </h2>
+                <p>
+                Hello %s,
+                </p>
+                <p>
+                We received a request to reset your CashTran password.
+                 </p>
+                 <p>
+                 <a href="%s"> Reset Your Password </a>
+                 </p>
+                  <p>
+                  This link will expire in 30 minutes.
+                   </p>
+                   <p>
+                   If you did not request this email, you can safely ignore it.
+                   </p>
+                   <br>
+                    <p>
+                     Thanks,<br> CashTran Team
+                      </p>
+                       </body>
+                        </html>
+                         """
+            .formatted(username, resetLink);
+    helper.setText(htmlContent, true);
+    return message;
+  }
+
+  private MimeMessage createTransferNotificationEmail(
+      String to,
+      String username,
+      String otherUsername,
+      BigDecimal amount,
+      String transferType,
+      String status)
+      throws MessagingException {
+    MimeMessage message = mailSender.createMimeMessage();
+    MimeMessageHelper helper = new MimeMessageHelper(message, true);
+    helper.setFrom(fromEmail);
+    helper.setTo(to);
     String subject;
-
     if ("Send".equalsIgnoreCase(transferType)) {
       subject = "CashTran - You Received a Transfer";
     } else if ("Approved".equalsIgnoreCase(status)) {
@@ -144,37 +184,29 @@ public class EmailService {
     } else {
       subject = "CashTran - Money Request";
     }
-
     helper.setSubject(subject);
-
     String htmlContent =
         """
-                <html>
-                    <body>
-                        <h2>CashTran Transfer Notification</h2>
-
-                        <p>Hello %s,</p>
-
-                        <p>
-                            %s
-                        </p>
-
-                        <p>
-                            <strong>Other User:</strong> %s<br>
-                            <strong>Amount:</strong> $%s<br>
-                            <strong>Type:</strong> %s<br>
-                            <strong>Status:</strong> %s
-                        </p>
-
-                        <br>
-
-                        <p>
-                            Thanks,<br>
-                            CashTran Team
-                        </p>
-                    </body>
-                </html>
-                """
+                 <html>
+                <body>
+                <h2>CashTran Transfer Notification</h2>
+                <p>Hello %s,</p>
+                <p>
+                 %s
+                  </p>
+                  <p> <strong>Other User:</strong> %s<br>
+                   <strong>Amount:</strong> $%s<br>
+                    <strong>Type:</strong> %s<br>
+                    <strong>Status:</strong> %s
+                    </p>
+                    <br>
+                    <p>
+                     Thanks,<br>
+                      CashTran Team
+                      </p>
+                       </body>
+                       </html>
+                       """
             .formatted(
                 username,
                 getTransferMessage(transferType, status),
@@ -182,30 +214,29 @@ public class EmailService {
                 amount.setScale(2, RoundingMode.HALF_UP),
                 transferType,
                 status);
-
     helper.setText(htmlContent, true);
-
-    mailSender.send(message);
+    return message;
   }
 
   private String getTransferMessage(String transferType, String status) {
-
     if ("Send".equalsIgnoreCase(transferType)) {
       return "You have received a money transfer.";
     }
-
     if ("Pending".equalsIgnoreCase(status)) {
       return "You have received a new money request.";
     }
-
     if ("Approved".equalsIgnoreCase(status)) {
       return "Your money request has been approved.";
     }
-
     if ("Rejected".equalsIgnoreCase(status)) {
       return "Your money request has been rejected.";
     }
-
     return "There has been an update to your CashTran transaction.";
+  }
+
+  /** * Centralized logging for SMTP/mail-server failures. */
+  private void logMailSendFailure(String emailType, String recipient, MailSendException e) {
+    log.error(
+        "Failed to send {} to {}. Mail server error: {}", emailType, recipient, e.getMessage(), e);
   }
 }
