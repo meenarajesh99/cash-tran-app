@@ -3,12 +3,14 @@
 ## Project Overview
 
 **Cash Tran** is a peer-to-peer payment system for transferring "CT Bucks" between users. It's a full-stack application with:
-- **Frontend**: React 19 + Vite (port 3000)
+- **Frontend**: React 19 + Vite (development server defaults to port 5173; Docker frontend is exposed on port 3000)
 - **Backend**: Spring Boot 3.5 + PostgreSQL (port 8080)
 - **Database**: PostgreSQL with Flyway migrations
-- **Deployment**: Docker Compose orchestration
+- **Deployment**: Docker Compose locally; Docker web services on Render
+- **Observability**: OpenTelemetry Java agent and Collector, with a Grafana Cloud exporter configured for local Compose
 
 The system implements two transfer workflows: **Send** (immediate) and **Request** (pending approval).
+For current local setup, Render deployment requirements, database profiles, and Grafana traffic generation, see [README.md](README.md).
 
 ## Architecture Patterns
 
@@ -36,6 +38,7 @@ cd cashtran-server
 ./mvnw clean package          # Full build with tests
 ./mvnw spring-boot:run       # Run locally (needs PostgreSQL at localhost:5432)
 ```
+- On Windows, use `.\mvnw.cmd` in PowerShell instead of `./mvnw`.
 - Maven wrapper included; no global Maven required
 - Application profiles: `local`, `docker`, `neon`, `prod` (set via `SPRING_PROFILES_ACTIVE`)
 - Environment variables override `application.properties` (e.g., `DB_HOST`, `JWT_BASE64_SECRET`)
@@ -43,33 +46,36 @@ cd cashtran-server
 ### Build & Run Frontend
 ```bash
 cd cashtran-frontend
-npm install
+npm ci
 npm run dev                   # Vite dev server with HMR
+npm test
 npm run build                # Production build
 npm run lint                 # ESLint check
 npm run format               # Prettier formatting
 ```
-- Vite automatically picks up `VITE_API_URL` env var (defaults to `http://localhost:8080`)
+- Vite development server defaults to port 5173 and proxies `/api` to `http://localhost:8080`.
+- `VITE_API_URL` is used by the built frontend; Docker exposes the frontend on port 3000.
 - Token stored as `cashtran_token` in `localStorage`
 
 ### Docker Local Development
 ```bash
 # Root directory docker-compose.yml brings up full stack
-docker-compose up --build    # First run; includes DB migrations via Flyway
+docker compose up --build    # First run; includes DB migrations via Flyway
 
 # View logs
-docker-compose logs -f backend
-docker-compose logs -f db
+docker compose logs -f backend
+docker compose logs -f db
 ```
 - Database port: 5433 (mapped from container 5432) to avoid conflicts
-- DB_PASSWORD must be set as env var; no default provided
+- `DB_PASSWORD` and `JWT_BASE64_SECRET` must be set through a private local `.env` or environment; never commit or print secret values.
 - Health check on DB waits for `pg_isready` before backend starts
+- The Compose stack also runs an OpenTelemetry Collector. Configure its Grafana Cloud settings in the private environment; see README.md.
 
 ### Database Migrations
 - Flyway enabled by default (`spring.flyway.enabled=true`)
-- SQL files in `src/main/resources/db/migration/` with naming pattern `V#__*.sql`
-- `V1__after_jpa.sql` creates all core tables and sequences
-- To add new migrations: create `V2__*.sql` in the directory; Flyway auto-runs on startup
+- SQL files in `cashtran-server/src/main/resources/db/migration/` use the `V#__*.sql` naming pattern
+- Add a new sequential migration file for schema changes; Flyway applies migrations on startup
+- Hibernate validates the schema rather than generating production tables
 
 ### Debugging & Testing
 - SLF4J logging configured at DEBUG level for `com.perscholas` package
@@ -80,11 +86,12 @@ docker-compose logs -f db
 ## Project-Specific Conventions
 
 ### API Endpoint Structure
-- Auth endpoints: `/api/auth/login`, `/api/auth/register` (public)
-- User data: `/api/users`, `/api/username/{accountId}`, `/api/account/{id}`
-- Account: `/api/balance` (returns user's balance)
-- Transfers: `/api/transfers` (list), `/api/transfers/{id}` (detail), `/api/transfers/send` (send money)
-- Requests: `/api/requests` (create), `/api/transfer/{transferId}/accept`, `/api/transfer/{transferId}/reject`
+- Authentication: `/api/auth/login`, `/api/auth/register`, password reset, and MFA enrollment/login endpoints
+- Account and user data: `GET /api/account`, `PUT /api/account/email`, `GET /api/balance`, `GET /api/users`, and `GET /api/username/{accountId}`
+- Transfers: `POST /api/transfers/send` sends immediately; `GET /api/transfers` lists approved transfers; `GET /api/transfers/{transferId}` retrieves details
+- Requests: `POST /api/requests` creates a request; `GET /api/transfers/pending/received` and `/api/transfers/pending/sent` list pending requests; `PUT /api/transfers/{transferId}/approve` and `/reject` resolve them
+- Statement: `GET /api/transfers/statement` returns a PDF
+- All `/api` application endpoints require authentication; auth operations are under `/api/auth`.
 
 ### Frontend Component Structure
 - **Pages** in `src/pages/`: Dashboard, Login, Register, SendTransfer, Transfers, Users
@@ -148,8 +155,15 @@ docker-compose logs -f db
 1. **Token Expires Silently**: Frontend doesn't auto-refresh JWT. On 401, redirect to login manually in axios error interceptor.
 2. **Database Sequence Gaps**: If inserts fail, check sequences haven't been manually reset or reached `NO MAXVALUE` boundary.
 3. **Missing Environment Variables**: Backend fails silently if `JWT_BASE64_SECRET` not set; logs won't show why token creation fails.
-4. **CORS Issues**: Check `VITE_API_URL` matches actual backend URL; frontend Vite proxy setup not configured (direct axios calls expected).
+4. **Frontend API Routing**: Vite proxies `/api` to localhost during development. The Docker frontend uses Nginx to proxy `/api/` to the configured Render backend; keep it consistent with the deployed service URL.
 5. **Flyway Lock**: If migrations hang, check `flyway_schema_history` table isn't locked in `pg_isready` state.
+6. **Grafana Has No Render Telemetry**: The checked-in Render configuration does not set up a Grafana OTLP endpoint/authentication or a Collector. Configure telemetry export in Render before expecting the traffic generator to produce Grafana data.
+
+### Render and Grafana Traffic
+- Render services and their Dockerfiles are described in the root `render.yaml`; secrets and database connection settings belong in Render environment settings, not source files.
+- The production Spring profile reads `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `JWT_BASE64_SECRET`. Check the variable names in `application-prod.properties`; do not assume a provider's `DATABASE_URL` is mapped to `DB_URL`.
+- `scripts/generate-grafana-traffic.ps1` sends low-rate, read-only GET requests. Its default target is the configured Render backend; see README.md for health-check and invocation examples.
+- HTTP traffic only appears in Grafana if the backend OpenTelemetry agent can export to a configured endpoint/Collector. Local Docker Compose includes a Collector; the current Render blueprint does not.
 
 ## Key Files for Understanding Critical Behavior
 
@@ -163,6 +177,9 @@ docker-compose logs -f db
 | `cashtran-frontend/src/auth/AuthProvider.jsx`                                              | State management for logged-in user; controls ProtectedRoute access |
 | `docker-compose.yml`                                                                       | Service orchestration; sets env vars for all components; dependency ordering |
 | `cashtran-server/src/main/resources/db/migration/V1__after_jpa.sql`                        | DB schema; defines `cashtran_user`, `account`, `transfer` tables with constraints |
+| `render.yaml`                                                                              | Render Docker service definitions and non-secret environment defaults |
+| `otel/config.yaml`                                                                         | Local OpenTelemetry Collector receivers and Grafana Cloud exporter |
+| `scripts/generate-grafana-traffic.ps1`                                                     | Bounded read-only traffic generator for backend telemetry |
 
 ## AI Coding Agent Rules
 

@@ -128,7 +128,7 @@ Then run the script against Render:
 .\scripts\generate-grafana-traffic.ps1 -BackendUrl "https://cashtran-backend.onrender.com" -DurationSeconds 300 -IntervalSeconds 5
 ```
 
-The script defaults to `http://localhost:8080` for five minutes if `-BackendUrl` is omitted. It sends a small, rate-limited set of GET requests to the API root, health endpoint, balance, and transfers endpoints. The balance and transfers calls are intentionally unauthenticated and may return `401` or `403`; they are read-only and do not create or change account data.
+The script defaults to `https://cashtran-backend.onrender.com` for five minutes if `-BackendUrl` is omitted. Pass `-BackendUrl "http://localhost:8080"` to target a local backend instead. It sends a small, rate-limited set of GET requests to the API root, health endpoint, balance, and transfers endpoints. The balance and transfers calls are intentionally unauthenticated and may return `401` or `403`; they are read-only and do not create or change account data.
 
 The script accepts only HTTP(S) URLs, limits each run to 30 minutes, and makes no write requests. Sending requests to a hosted service may incur usage or wake a scaled-to-zero service. Allow a short time for telemetry batching/export, then inspect the `cashtran-backend` service in Grafana Explore. The script creates backend HTTP traffic; telemetry will appear only if the Java agent and exporter/Collector are configured and healthy.
 
